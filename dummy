@@ -31,3 +31,44 @@ def get_activity_output_data(activity_runs, pipeline_runId, pipelinename):
                 result.append(dataRead_data)
 
     return result
+
+
+
+
+
+
+import requests
+
+def get_pipeline_runs(adf_url: str, headers: dict) -> list:
+    """
+    Sends a POST request to the Azure Data Factory API to retrieve pipeline runs.
+    
+    Args:
+    adf_url (str): The Azure Data Factory URL to send the request to.
+    headers (dict): The headers to include in the request.
+
+    Returns:
+    A list of pipeline runs retrieved from the API.
+    """
+    try:
+        response = requests.post(adf_url, headers=headers)
+        response.raise_for_status()
+        return response.json()['value']
+    except requests.exceptions.HTTPError as errh:
+        print("HTTP error:", errh)
+    except requests.exceptions.ConnectionError as errc:
+        print("Connection error:", errc)
+    except requests.exceptions.Timeout as errt:
+        print("Timeout error:", errt)
+    except requests.exceptions.RequestException as err:
+        print("Oops! Something went wrong:", err)
+
+# Define the ADF URL and headers
+adf_url = 'https://<your-adf-name>.azuredatafactory.net/api/v1/PipelineRuns/QueryByFactory'
+headers = {
+    'Authorization': 'Bearer <your-token>',
+    'Content-Type': 'application/json'
+}
+
+# Get pipeline runs
+pipeline_runs = get_pipeline_runs(adf_url, headers)
