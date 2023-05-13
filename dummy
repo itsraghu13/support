@@ -1,24 +1,33 @@
-result = []
-for activity in activity_runs:
-    if activity["activityType"] == "Copy":
-        output = activity["output"]
-        if "rowsRead" in output:
-            rowsRead_data = {
-                "RunID": pipeline_runId,
-                "PipelineName": pipelinename,
-                "RowsRead": output["rowsRead"],
-                "RowsWritten": output["rowsCopied"],
-                "ActivityName": activity["activityName"]
-            }
-            result.append(rowsRead_data)
-            print(rowsRead_data)
-        elif "dataRead" in output:
-            dataRead_data = {
-                "RunID": pipeline_runId,
-                "PipelineName": pipelinename,
-                "RowsRead": output["dataRead"],
-                "RowsWritten": output["dataWritten"],
-                "ActivityName": activity["activityName"]
-            }
-            result.append(dataRead_data)
-            print(dataRead_data)
+def get_activity_output_data(activity_runs, pipeline_runId, pipelinename):
+    """
+    This function takes in a list of activity runs, a pipeline run ID, and a pipeline name.
+    It filters the activity runs to only keep those with activityType "Copy".
+    For each "Copy" activity, it extracts the output data ("rowsRead" or "dataRead") and creates a dictionary
+    containing relevant information such as run ID, pipeline name, rows read/written, and activity name.
+    The dictionaries are appended to a result list.
+    At the end, the function returns the result list.
+    """
+    result = []
+    for activity in activity_runs:
+        if activity["activityType"] == "Copy":
+            output = activity["output"]
+            if "rowsRead" in output:
+                rowsRead_data = {
+                    "RunID": pipeline_runId,
+                    "PipelineName": pipelinename,
+                    "RowsRead": output["rowsRead"],
+                    "RowsWritten": output["rowsCopied"],
+                    "ActivityName": activity["activityName"]
+                }
+                result.append(rowsRead_data)
+            elif "dataRead" in output:
+                dataRead_data = {
+                    "RunID": pipeline_runId,
+                    "PipelineName": pipelinename,
+                    "RowsRead": output["dataRead"],
+                    "RowsWritten": output["dataWritten"],
+                    "ActivityName": activity["activityName"]
+                }
+                result.append(dataRead_data)
+
+    return result
