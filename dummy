@@ -149,3 +149,113 @@ for item in data:
     parent_id, current_id = get_parent_id_recursive(result['parameters'], item['run_id'])
     print(parent_id)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Define the URL to fetch pipeline runs
+adf_url = "https://management.azure.com/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Datafactory/factories/{}/pipelineruns".format(
+    subscription_id, resource_GroupName, factory_name)
+
+# Define the headers for authorization
+headers = {
+    "Authorization": "Bearer {}".format(access_token)
+}
+
+# Loop through the data list and process each item
+for item in data:
+    
+    # Get the pipeline runs
+    pipeline_runs = get_pipeline_runs(adf_url, headers, item['run_id'], last_updated_after, last_updated_before, item['pipelineName'])
+    
+    # Get the result of the activity output data
+    result = get_activity_output_data(pipeline_runs, item['run_id'], item['pipelineName'])
+    
+    # Get the parent run id recursively
+    parent_runid = get_parent_id_recursive(item['run_id'], pipeline_runs)
+    
+    # Print the parent run id
+    print(parent_runid)
+    
+    # If there is a parent run id, define the schema with additional column
+    if parent_runid:
+        schema = StructType([
+            StructField("ActivityName", StringType(), True),
+            StructField("PipelineName", StringType(), True),
+            StructField("RowsRead", LongType(), True),
+            StructField("RowsWritten", LongType(), True),
+            StructField("RunID", StringType(), True),
+            StructField("Parent_RunId", StringType(), True)
+        ])
+    else:
+        schema = StructType([
+            StructField("ActivityName", StringType(), True),
+            StructField("PipelineName", StringType(), True),
+            StructField("RowsRead", LongType(), True),
+            StructField("RowsWritten", LongType(), True),
+            StructField("RunID", StringType(), True)
+        ])
+    
+    # Create a Spark dataframe from the result and schema
+    if result:
+        df = spark.createDataFrame(result, schema=schema)
+    else:
+        df = spark.createDataFrame([(None, item['pipelineName'], None, None, item['run_id'])], schema=schema)
+    
+    # Add parent_runid column to the dataframe
+    if parent_runid:
+        df = df.withColumn("Parent_RunId", lit(parent_runid[0]))
+    
+    # Write the dataframe to delta table
+    df.write.format("delta").mode("append").option("overwriteSchema", "true").saveAsTable('structured.t_child_rgv')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def get_parent_id_recursive(pipeline_runId):
+    response = requests.get(adf_url, headers=headers)
+    parameters_data = json.loads(response.text)
+
+    parent_id = None
+    current_id = None
+
+    # Loop through the items in the parameters_data dictionary
+    for key, value in parameters_data.items():
+        if key == "invokedBy":
+            if value['invokedByType'] != "Manual":
+                current_id = value['pipelineRunId']
+                break
+
+    # If a current_id was found, call the function recursively with that id and update the parent_id
+    if current_id:
+        parent_id, _ = get_parent_id_recursive(current_id)
+    else:
+        parent_id = pipeline_runId
+    
+    return parent_id, current_id
+
