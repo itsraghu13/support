@@ -116,3 +116,36 @@ headers = {
 # Get pipeline runs
 pipeline_runs = get_pipeline_runs(adf_url, headers)
 
+
+
+
+
+
+
+
+
+
+
+def get_parent_id_recursive(parameters_data, pipeline_runId):
+    parent_id = None
+    current_id = None
+    
+    for key, value in parameters_data.items():
+        if key == "invokedBy":
+            if value['invokedByType'] != "Manual":
+                current_id = value['pipelineRunId']
+                parent_id, current_id = get_parent_id_recursive(parameters_data, current_id)
+            else:
+                parent_id = pipeline_runId
+                
+    return parent_id, current_id
+
+
+
+
+for item in data:
+    pipeline_runs = get_pipeline_runs(adf_url, headers)
+    result = get_activity_output_data(pipeline_runs, item['run_id'], item['pipelineName'])
+    parent_id, current_id = get_parent_id_recursive(result['parameters'], item['run_id'])
+    print(parent_id)
+
