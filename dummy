@@ -361,3 +361,49 @@ def get_parent_id_recursive(adf_url, headers, pipeline_runId):
 
     return parent_id
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import requests
+import json
+
+def get_parent_id_recursive(ID, subscription_id, resource_GroupName, factory_name, access_token, previous_id=None):
+    api_version = '2018-06-01'
+    adf_url = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/pipelineruns/{ID}?api-version={api_version}"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(adf_url, headers=headers)
+    parameters_data = json.loads(response.text)
+
+    parent_id = None
+    current_id = None
+    for key, value in parameters_data.items():
+        if key == "invokedBy":
+            if value['invokedByType'] != "Manual":
+                current_id = value['pipelineRunId']
+                if current_id == previous_id:
+                    # If we've already processed the current ID, break out of the loop
+                    parent_id = current_id
+                    break
+                else:
+                    parent_id, current_id = get_parent_id_recursive(current_id, subscription_id, resource_GroupName, factory_name, access_token, previous_id=ID)
+                    parent_id = parent_id if parent_id is not None else current_id
+                    break
+
+    # If no current_id was found to match ID, return ID itself as parent_id
+    parent_id = parent_id if parent_id is not None else ID
+
+    return parent_id, current_id
