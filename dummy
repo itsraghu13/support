@@ -332,3 +332,32 @@ def get_parent_id_recursive(adf_url, headers, pipeline_runId):
     
     return parent_id
 
+
+
+
+
+
+
+
+def get_parent_id_recursive(adf_url, headers, pipeline_runId):
+    response = requests.post(adf_url, headers=headers)
+    parameters_data_list = response.json()['value']
+    parent_id = None
+    current_id = None
+
+    # Loop through the items in the parameters_data_list 
+    for parameters_data in parameters_data_list:
+        for key, value in parameters_data.items():
+            if key == "invokedBy":
+                if value['invokedByType'] != "Manual":
+                    current_id = value['pipelineRunId']
+                    break
+
+        # If a current_id was found, call the function recursively with that id and update the parent_id
+        if current_id:
+            parent_id, _ = get_parent_id_recursive(adf_url, headers, current_id)
+        else:
+            parent_id = pipeline_runId
+
+    return parent_id
+
