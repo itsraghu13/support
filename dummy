@@ -477,3 +477,45 @@ def get_parent_id_recursive(ID, subscription_id, resource_GroupName, factory_nam
     return parent_id
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+total_list = [f.path for f in dbutils.fs.ls(raw_path) if f.name.endswith('/') or 'FID' in f.name]
+
+
+
+def adls_path(path):
+    total_list = []
+    stack = [path]
+    
+    while stack:
+        current_path = stack.pop()
+        files = dbutils.fs.ls(current_path)
+        
+        for f in files:
+            if f.name.endswith('/'):
+                stack.append(f.path)
+            elif 'FID' in f.name:
+                total_list.append(f.path)
+    
+    return total_list
+
+result = adls_path(raw_path)
+
