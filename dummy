@@ -519,3 +519,41 @@ def adls_path(path):
 
 result = adls_path(raw_path)
 
+
+
+
+
+
+
+
+
+
+
+import requests
+import json
+
+def get_parent_id_recursive(input_id):
+    # Construct request URL using input parameters
+    pipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/pipelineruns/{input_id}?api-version=2018-06-01"
+    
+    # Set headers with access token
+    headers = {"Authorization": "Bearer " + access_token}
+    
+    # Send GET request to Azure API and load data into JSON object
+    response = requests.get(pipelineRuns_URL, headers=headers)
+    parameters_data = json.loads(response.text)
+    
+    # Loop through JSON object and check for activity that invoked the current pipeline run
+    while "invokedBy" in parameters_data and parameters_data["invokedBy"]["invokedByType"] != "Manual":
+        # Update input ID to pipeline run ID of invoking activity
+        input_id = parameters_data["invokedBy"]["pipelineRunId"]
+        
+        # Send new GET request with updated input ID
+        pipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/pipelineruns/{input_id}?api-version=2018-06-01"
+        response = requests.get(pipelineRuns_URL, headers=headers)
+        parameters_data = json.loads(response.text)
+        
+    # Return the top-level parent ID
+    return input_id
+
+
