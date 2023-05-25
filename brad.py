@@ -38,4 +38,9 @@ def get_parameters_data(pipeline_run_id):
 
     # Write the merged DataFrame back to the Delta table
     df_merged.write.format('delta').mode('overwrite').option('overwriteSchema', 'true').saveAsTable('structured.t_meta_pipelines')
+                      
+                      
+                      
+                      
+df_merged = sqlContext.sql(f"MERGE INTO structured.t_meta_pipelines AS t USING (SELECT * FROM {df_combined.alias('c')}) AS c ON t.runId = c.runId WHEN MATCHED THEN UPDATE SET parameters = c.parameters WHEN NOT MATCHED THEN INSERT (runId, pipelineName, parameters, message, runStart, runEnd, durationInMs, status) VALUES (c.runId, c.pipelineName, c.parameters, c.message, c.runStart, c.runEnd, c.durationInMs, c.status)")
 
