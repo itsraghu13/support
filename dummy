@@ -1,3 +1,9 @@
+https://learn.microsoft.com/en-us/answers/questions/705328/get-bearer-token-for-azure-management-api-using-da
+
+https://learn.microsoft.com/en-us/answers/questions/659904/get-authorization-bearer-token-for-azure-managemen
+
+
+
 def get_activity_output_data(activity_runs, pipeline_runId, pipelinename):
     """
     This function takes in a list of activity runs, a pipeline run ID, and a pipeline name.
