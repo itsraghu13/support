@@ -33,6 +33,7 @@ print(f"Retrieved {len(data)} pipeline runs")
 
 
 import requests
+from concurrent.futures import ThreadPoolExecutor
 
 queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&startTime={start_time}&endTime={end_time}"
 
@@ -41,25 +42,29 @@ headers = {'Authorization': 'Bearer ' + access_token}
 data = []
 
 def retrieve_pipeline_runs(url):
-    while url:
-        response = requests.post(url, headers=headers)
-        if response.status_code != 200:
-            print(f"Error retrieving pipeline runs. Status Code: {response.status_code}")
-            return
+    response = requests.post(url, headers=headers)
+    if response.status_code != 200:
+        print(f"Error retrieving pipeline runs. Status Code: {response.status_code}")
+        return []
+    response_json = response.json()
+    pipeline_runs = response_json.get('value', [])
+    return pipeline_runs
 
-        response_json = response.json()
+def retrieve_all_pipeline_runs(query_url):
+    continuation_token = True
+    while continuation_token:
+        with ThreadPoolExecutor() as executor:
+            futures = []
+            for url in query_url:
+                futures.append(executor.submit(retrieve_pipeline_runs, url))
+            for future in futures:
+                pipeline_runs = future.result()
+                data.extend(pipeline_runs)
+                continuation_token = bool(pipeline_runs)
+        query_url = [f"{queryPipelineRuns_URL}&continuationToken={pipeline_runs[-1]['runId']}" for pipeline_runs in data]
 
-        if 'value' in response_json:
-            pipeline_runs = response_json['value']
-            data.extend(pipeline_runs)
-
-        continuation_token = response_json.get('continuationToken')
-        if continuation_token:
-            url = f"{queryPipelineRuns_URL}&continuationToken={continuation_token}"
-        else:
-            url = None
-
-retrieve_pipeline_runs(queryPipelineRuns_URL)
+retrieve_all_pipeline_runs([queryPipelineRuns_URL])
 
 print(f"Retrieved {len(data)} pipeline runs")
+
 
