@@ -1,110 +1,48 @@
 import requests
 
-queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&startTime={start_time}&endTime={end_time}"
+def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, last_updated_after, last_updated_before):
 
-headers = {'Authorization': 'Bearer ' + access_token}
+    queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&lastUpdatedAfter={last_updated_after}&lastUpdatedBefore={last_updated_before}"
 
-data = []
+    headers = {
+        'Authorization': 'Bearer ' + access_token
+    }
 
-while True:
     response = requests.post(queryPipelineRuns_URL, headers=headers)
 
-    if response.status_code != 200:
-        print(f"Error retrieving pipeline runs. Status Code: {response.status_code}")
-        break
+    pipeline_runs = response.json()['value']
 
-    response_json = response.json()
+    data = []
 
-    if 'value' in response_json:
-        pipeline_runs = response_json['value']
-        data.extend(pipeline_runs)
+    for run in pipeline_runs:
+        if run['continuationToken']:
+            print('Yes')
 
-    continuation_token = response_json.get('continuationToken')
-    if not continuation_token:
-        break
+        run_dict = {
+            'pipelineName': run['pipelineName'],
+            'runId': run['runId']
+        }
 
-    queryPipelineRuns_URL = f"{queryPipelineRuns_URL}&continuationToken={continuation_token}"
+        data.append(run_dict)
 
-print(f"Retrieved {len(data)} pipeline runs")
+    while continuation_token:
+        continuation_token = response.json()['continuationToken']
 
+        if continuation_token:
+            response = requests.post(queryPipelineRuns_URL, headers=headers, params={'continuationToken': continuation_token})
 
+            pipeline_runs = response.json()['value']
 
+            for run in pipeline_runs:
+                if run['continuationToken']:
+                    print('Yes')
 
+                run_dict = {
+                    'pipelineName': run['pipelineName'],
+                    'runId': run['runId']
+                }
 
+                data.append(run_dict)
 
-import requests
-
-queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&startTime={start_time}&endTime={end_time}"
-
-headers = {'Authorization': 'Bearer ' + access_token}
-
-data = []
-
-continuation_token = None
-
-while True:
-    url = queryPipelineRuns_URL
-    if continuation_token:
-        url += f"&continuationToken={continuation_token}"
-
-    response = requests.post(url, headers=headers)
-
-    if response.status_code != 200:
-        print(f"Error retrieving pipeline runs. Status Code: {response.status_code}")
-        break
-
-    response_json = response.json()
-    pipeline_runs = response_json.get('value', [])
-    data.extend(pipeline_runs)
-
-    continuation_token = response_json.get('continuationToken')
-    if not continuation_token:
-        break
-
-print(f"Retrieved {len(data)} pipeline runs")
-
-
-
-
-
-
-
-
-
-
-
-
-import requests
-
-queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&$filter=runStart ge '{start_time}' and runEnd le '{end_time}'"
-
-headers = {'Authorization': 'Bearer ' + access_token}
-
-data = []
-
-continuation_token = None
-
-while True:
-    url = queryPipelineRuns_URL
-    if continuation_token:
-        url += f"&continuationToken={continuation_token}"
-
-    response = requests.post(url, headers=headers)
-
-    if response.status_code != 200:
-        print(f"Error retrieving pipeline runs. Status Code: {response.status_code}")
-        break
-
-    response_json = response.json()
-    pipeline_runs = response_json.get('value', [])
-    
-    data.extend(pipeline_runs)
-
-    continuation_token = response_json.get('continuationToken')
-    if not continuation_token:
-        break
-
-filtered_data = [run for run in data if start_time <= run['runStart'] <= end_time]
-print(f"Retrieved {len(filtered_data)} pipeline runs between {start_time} and {end_time}")
-
+    return data
 
