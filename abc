@@ -59,12 +59,13 @@ def retrieve_all_pipeline_runs(query_url):
                 futures.append(executor.submit(retrieve_pipeline_runs, url))
             for future in futures:
                 pipeline_runs = future.result()
-                data.extend(pipeline_runs)
-                continuation_token = bool(pipeline_runs)
-        query_url = [f"{queryPipelineRuns_URL}&continuationToken={pipeline_runs[-1]['runId']}" for pipeline_runs in data]
+                if pipeline_runs:
+                    data.extend(pipeline_runs)
+                    continuation_token = True
+                    query_url = [f"{queryPipelineRuns_URL}&continuationToken={pipeline_runs[-1]['runId']}" for pipeline_runs in data]
+                else:
+                    continuation_token = False
 
 retrieve_all_pipeline_runs([queryPipelineRuns_URL])
 
 print(f"Retrieved {len(data)} pipeline runs")
-
-
