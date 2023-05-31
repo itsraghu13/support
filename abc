@@ -48,7 +48,7 @@ def retrieve_pipeline_runs(url):
         return []
     response_json = response.json()
     pipeline_runs = response_json.get('value', [])
-    return pipeline_runs
+    return pipeline_runs, response_json.get('continuationToken')
 
 def retrieve_all_pipeline_runs(query_url):
     continuation_token = True
@@ -57,14 +57,13 @@ def retrieve_all_pipeline_runs(query_url):
             futures = []
             for url in query_url:
                 futures.append(executor.submit(retrieve_pipeline_runs, url))
+            query_url = []
             for future in futures:
-                pipeline_runs = future.result()
+                pipeline_runs, continuation_token = future.result()
                 if pipeline_runs:
                     data.extend(pipeline_runs)
-                    continuation_token = True
-                    query_url = [f"{queryPipelineRuns_URL}&continuationToken={pipeline_runs[-1]['runId']}" for pipeline_runs in data]
-                else:
-                    continuation_token = False
+                    if continuation_token:
+                        query_url.append(f"{queryPipelineRuns_URL}&continuationToken={continuation_token}")
 
 retrieve_all_pipeline_runs([queryPipelineRuns_URL])
 
