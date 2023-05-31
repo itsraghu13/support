@@ -121,3 +121,44 @@ def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, st
 pipeline_runs = get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, start_time, end_time)
 
 
+
+
+
+
+
+import requests
+
+def fetch_pipeline_runs(url, headers):
+    response = requests.post(url, headers=headers)
+    return response.json()
+
+def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, start_time, end_time):
+    queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&$filter=runStart ge '{start_time}' and runEnd le '{end_time}'"
+    
+    headers = {'Authorization': 'Bearer ' + access_token}
+
+    continuation_token = None
+    data = []
+
+    while True:
+        url = queryPipelineRuns_URL
+        if continuation_token:
+            url += f"&continuationToken={continuation_token}"
+
+        response = fetch_pipeline_runs(url, headers)
+        pipeline_runs = response.get('value', [])
+
+        filtered_runs = [{'pipelineName': run['pipelineName'], 'runId': run['runId']} for run in pipeline_runs if start_time <= run['runStart'] <= end_time and start_time <= run['runEnd'] <= end_time]
+        data.extend(filtered_runs)
+
+        continuation_token = response.get('continuationToken')
+        if not continuation_token:
+            break
+
+    return data
+
+# Call the function
+pipeline_runs = get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, start_time, end_time)
+
+
+
