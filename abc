@@ -1,105 +1,30 @@
-import requests
+import asyncio
+import aiohttp
 
-def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, last_updated_after, last_updated_before):
+async def fetch_pipeline_runs(session, url):
+    async with session.post(url) as response:
+        return await response.json()
 
+async def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, last_updated_after, last_updated_before):
     queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&lastUpdatedAfter={last_updated_after}&lastUpdatedBefore={last_updated_before}"
+    
+    headers = {'Authorization': 'Bearer ' + access_token}
+    
+    async with aiohttp.ClientSession(headers=headers) as session:
+        response = await fetch_pipeline_runs(session, queryPipelineRuns_URL)
+        pipeline_runs = response.get('value', [])
+        data = [{'pipelineName': run['pipelineName'], 'runId': run['runId']} for run in pipeline_runs]
 
-    headers = {
-        'Authorization': 'Bearer ' + access_token
-    }
+        continuation_token = response.get('continuationToken')
 
-    response = requests.post(queryPipelineRuns_URL, headers=headers)
-
-    pipeline_runs = response.json()['value']
-
-    data = []
-
-    for run in pipeline_runs:
-        if run['continuationToken']:
-            print('Yes')
-
-        run_dict = {
-            'pipelineName': run['pipelineName'],
-            'runId': run['runId']
-        }
-
-        data.append(run_dict)
-
-    while continuation_token:
-        continuation_token = response.json()['continuationToken']
-
-        if continuation_token:
-            response = requests.post(queryPipelineRuns_URL, headers=headers, params={'continuationToken': continuation_token})
-
-            pipeline_runs = response.json()['value']
-
-            for run in pipeline_runs:
-                if run['continuationToken']:
-                    print('Yes')
-
-                run_dict = {
-                    'pipelineName': run['pipelineName'],
-                    'runId': run['runId']
-                }
-
-                data.append(run_dict)
-
-    return data
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-   import requests
-import paginator
-
-def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, last_updated_after, last_updated_before):
-
-    queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&lastUpdatedAfter={last_updated_after}&lastUpdatedBefore={last_updated_before}"
-
-    headers = {
-        'Authorization': 'Bearer ' + access_token
-    }
-
-    paginator = paginator.Paginate(
-        requests.post,
-        queryPipelineRuns_URL,
-        headers=headers,
-        params={'continuationToken': None}
-    )
-
-    for page in paginator:
-        pipeline_runs = page['value']
-
-        for run in pipeline_runs:
-            run_dict = {
-                'pipelineName': run['pipelineName'],
-                'runId': run['runId']
-            }
-
-            data.append(run_dict)
+        while continuation_token:
+            url_with_token = queryPipelineRuns_URL + f"&continuationToken={continuation_token}"
+            response = await fetch_pipeline_runs(session, url_with_token)
+            pipeline_runs = response.get('value', [])
+            data.extend([{'pipelineName': run['pipelineName'], 'runId': run['runId']} for run in pipeline_runs])
+            continuation_token = response.get('continuationToken')
 
     return data
 
-
+# Call the function
+pipeline_runs = asyncio.run(get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, last_updated_after, last_updated_before))
