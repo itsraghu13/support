@@ -1,0 +1,21 @@
+import requests
+
+queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&startTime={start_time}&endTime={end_time}"
+
+headers = {'Authorization': 'Bearer ' + access_token}
+
+data = []
+
+while True:
+    response = requests.post(queryPipelineRuns_URL, headers=headers)
+
+    pipeline_runs = response.json().get('value', [])
+    data.extend(pipeline_runs)
+    
+    continuation_token = response.json().get('continuationToken')
+    if not continuation_token:
+        break
+    
+    queryPipelineRuns_URL = f"{queryPipelineRuns_URL}&continuationToken={continuation_token}"
+
+print(f"Retrieved {len(data)} pipeline runs")
