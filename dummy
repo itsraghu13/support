@@ -614,5 +614,51 @@ if pipeline_runs is not None:
             df.write.format("delta").mode("append").option("overwriteSchema", "true").saveAsTable(delta_table_name)
     else:
         df.write.format("delta").mode("append").option("overwriteSchema", "true").saveAsTable(delta_table_name)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+queryPipelineRuns_URL = ("https://management.azure.com/subscriptions/{subscription_id}/"
+                         "resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/"
+                         "factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01")
+
+headers = {'Authorization': 'Bearer ' + access_token}
+
+data = []
+
+while True:
+    response = requests.post(queryPipelineRuns_URL.format(subscription_id=subscription_id,
+                                                          resource_GroupName=resource_GroupName,
+                                                          factory_name=factory_name),
+                             headers=headers)
+
+    pipeline_runs = response.json()['value']
+    data.extend(pipeline_runs)
+    
+    continuation_token = response.json().get('continuationToken')
+    if not continuation_token:
+        break
+    
+    queryPipelineRuns_URL += '&continuationToken=' + continuation_token
+
+print(f"Retrieved {len(data)} pipeline runs")
 
 
