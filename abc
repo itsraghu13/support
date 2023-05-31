@@ -38,6 +38,8 @@ queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscripti
 
 headers = {'Authorization': 'Bearer ' + access_token}
 
+data = []
+
 def retrieve_pipeline_runs(url):
     while url:
         response = requests.post(url, headers=headers)
@@ -49,10 +51,15 @@ def retrieve_pipeline_runs(url):
 
         if 'value' in response_json:
             pipeline_runs = response_json['value']
-            yield from pipeline_runs
+            data.extend(pipeline_runs)
 
-        url = response_json.get('nextLink')
+        continuation_token = response_json.get('continuationToken')
+        if continuation_token:
+            url = f"{queryPipelineRuns_URL}&continuationToken={continuation_token}"
+        else:
+            url = None
 
-data = list(retrieve_pipeline_runs(queryPipelineRuns_URL))
+retrieve_pipeline_runs(queryPipelineRuns_URL)
 
 print(f"Retrieved {len(data)} pipeline runs")
+
