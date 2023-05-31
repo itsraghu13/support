@@ -26,3 +26,33 @@ while True:
     queryPipelineRuns_URL = f"{queryPipelineRuns_URL}&continuationToken={continuation_token}"
 
 print(f"Retrieved {len(data)} pipeline runs")
+
+
+
+
+
+
+import requests
+
+queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&startTime={start_time}&endTime={end_time}"
+
+headers = {'Authorization': 'Bearer ' + access_token}
+
+def retrieve_pipeline_runs(url):
+    while url:
+        response = requests.post(url, headers=headers)
+        if response.status_code != 200:
+            print(f"Error retrieving pipeline runs. Status Code: {response.status_code}")
+            return
+
+        response_json = response.json()
+
+        if 'value' in response_json:
+            pipeline_runs = response_json['value']
+            yield from pipeline_runs
+
+        url = response_json.get('nextLink')
+
+data = list(retrieve_pipeline_runs(queryPipelineRuns_URL))
+
+print(f"Retrieved {len(data)} pipeline runs")
