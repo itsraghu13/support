@@ -33,7 +33,6 @@ print(f"Retrieved {len(data)} pipeline runs")
 
 
 import requests
-from concurrent.futures import ThreadPoolExecutor
 
 queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&startTime={start_time}&endTime={end_time}"
 
@@ -41,30 +40,26 @@ headers = {'Authorization': 'Bearer ' + access_token}
 
 data = []
 
-def retrieve_pipeline_runs(url):
+continuation_token = None
+
+while True:
+    url = queryPipelineRuns_URL
+    if continuation_token:
+        url += f"&continuationToken={continuation_token}"
+
     response = requests.post(url, headers=headers)
+
     if response.status_code != 200:
         print(f"Error retrieving pipeline runs. Status Code: {response.status_code}")
-        return []
+        break
+
     response_json = response.json()
     pipeline_runs = response_json.get('value', [])
-    return pipeline_runs, response_json.get('continuationToken')
+    data.extend(pipeline_runs)
 
-def retrieve_all_pipeline_runs(query_url):
-    continuation_token = True
-    while continuation_token:
-        with ThreadPoolExecutor() as executor:
-            futures = []
-            for url in query_url:
-                futures.append(executor.submit(retrieve_pipeline_runs, url))
-            query_url = []
-            for future in futures:
-                pipeline_runs, continuation_token = future.result()
-                if pipeline_runs:
-                    data.extend(pipeline_runs)
-                    if continuation_token:
-                        query_url.append(f"{queryPipelineRuns_URL}&continuationToken={continuation_token}")
-
-retrieve_all_pipeline_runs([queryPipelineRuns_URL])
+    continuation_token = response_json.get('continuationToken')
+    if not continuation_token:
+        break
 
 print(f"Retrieved {len(data)} pipeline runs")
+
