@@ -9,13 +9,20 @@ data = []
 while True:
     response = requests.post(queryPipelineRuns_URL, headers=headers)
 
-    pipeline_runs = response.json().get('value', [])
-    data.extend(pipeline_runs)
-    
-    continuation_token = response.json().get('continuationToken')
+    if response.status_code != 200:
+        print(f"Error retrieving pipeline runs. Status Code: {response.status_code}")
+        break
+
+    response_json = response.json()
+
+    if 'value' in response_json:
+        pipeline_runs = response_json['value']
+        data.extend(pipeline_runs)
+
+    continuation_token = response_json.get('continuationToken')
     if not continuation_token:
         break
-    
+
     queryPipelineRuns_URL = f"{queryPipelineRuns_URL}&continuationToken={continuation_token}"
 
 print(f"Retrieved {len(data)} pipeline runs")
