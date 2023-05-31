@@ -64,3 +64,60 @@ def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, st
 # Call the function
 pipeline_runs = get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, start_time, end_time)
 
+
+
+
+
+
+
+
+
+
+import requests
+from concurrent.futures import ThreadPoolExecutor
+
+def fetch_pipeline_runs(url, headers):
+    response = requests.post(url, headers=headers)
+    return response.json()
+
+def process_continuation_token(url, headers, start_time, end_time):
+    response = fetch_pipeline_runs(url, headers)
+    pipeline_runs = response.get('value', [])
+    filtered_runs = [{'pipelineName': run['pipelineName'], 'runId': run['runId']} for run in pipeline_runs if start_time <= run['runStart'] <= end_time and start_time <= run['runEnd'] <= end_time]
+    return filtered_runs, response.get('continuationToken')
+
+def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, start_time, end_time, batch_size=10, max_workers=10):
+    queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&$filter=runStart ge '{start_time}' and runEnd le '{end_time}'"
+    
+    headers = {'Authorization': 'Bearer ' + access_token}
+
+    response = fetch_pipeline_runs(queryPipelineRuns_URL, headers)
+    pipeline_runs = response.get('value', [])
+    data = [{'pipelineName': run['pipelineName'], 'runId': run['runId']} for run in pipeline_runs]
+
+    continuation_tokens = [response.get('continuationToken')]
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        while continuation_tokens:
+            batch_tokens = continuation_tokens[:batch_size]
+            continuation_tokens = continuation_tokens[batch_size:]
+
+            urls_with_tokens = [queryPipelineRuns_URL + f"&continuationToken={token}" for token in batch_tokens]
+            
+            futures = []
+            for url_with_token in urls_with_tokens:
+                future = executor.submit(process_continuation_token, url_with_token, headers, start_time, end_time)
+                futures.append(future)
+
+            for future in futures:
+                filtered_runs, token = future.result()
+                data.extend(filtered_runs)
+                if token:
+                    continuation_tokens.append(token)
+
+    return data
+
+# Call the function
+pipeline_runs = get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, start_time, end_time)
+
+
