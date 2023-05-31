@@ -63,3 +63,48 @@ while True:
 
 print(f"Retrieved {len(data)} pipeline runs")
 
+
+
+
+
+
+
+
+
+
+
+
+import requests
+
+queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&$filter=runStart ge '{start_time}' and runEnd le '{end_time}'"
+
+headers = {'Authorization': 'Bearer ' + access_token}
+
+data = []
+
+continuation_token = None
+
+while True:
+    url = queryPipelineRuns_URL
+    if continuation_token:
+        url += f"&continuationToken={continuation_token}"
+
+    response = requests.post(url, headers=headers)
+
+    if response.status_code != 200:
+        print(f"Error retrieving pipeline runs. Status Code: {response.status_code}")
+        break
+
+    response_json = response.json()
+    pipeline_runs = response_json.get('value', [])
+    
+    data.extend(pipeline_runs)
+
+    continuation_token = response_json.get('continuationToken')
+    if not continuation_token:
+        break
+
+filtered_data = [run for run in data if start_time <= run['runStart'] <= end_time]
+print(f"Retrieved {len(filtered_data)} pipeline runs between {start_time} and {end_time}")
+
+
