@@ -45,4 +45,61 @@ def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, la
                 data.append(run_dict)
 
     return data
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+   import requests
+import paginator
+
+def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, last_updated_after, last_updated_before):
+
+    queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01&lastUpdatedAfter={last_updated_after}&lastUpdatedBefore={last_updated_before}"
+
+    headers = {
+        'Authorization': 'Bearer ' + access_token
+    }
+
+    paginator = paginator.Paginate(
+        requests.post,
+        queryPipelineRuns_URL,
+        headers=headers,
+        params={'continuationToken': None}
+    )
+
+    for page in paginator:
+        pipeline_runs = page['value']
+
+        for run in pipeline_runs:
+            run_dict = {
+                'pipelineName': run['pipelineName'],
+                'runId': run['runId']
+            }
+
+            data.append(run_dict)
+
+    return data
+
 
