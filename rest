@@ -1,0 +1,121 @@
+## Azure Data Factory Pipeline Run Data Details API Documentation
+
+The following documentation outlines the steps for using the Azure REST API to retrieve pipeline run data details from an Azure Data Factory (ADF) pipeline. This API can be used to retrieve information such as the pipeline name, error details, and row counts, which can be analyzed to determine the status and effectiveness of the pipeline.
+
+### Prerequisites
+- Azure subscription with access to an Azure Data Factory instance.
+- Understanding of Azure REST APIs and authentication using an Access Token.
+
+### API Endpoint
+The endpoint for retrieving pipeline run data details is:
+
+`POST https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DataFactory/factories/{factoryName}/pipelineruns/queryPipelineRuns?api-version=2018-06-01`
+
+### Request Parameters
+The request must contain the following parameters:
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| subscriptionId | string | Yes | The subscription ID that the ADF instance is associated with |
+| resourceGroupName | string | Yes | The resource group name of the ADF instance |
+| factoryName | string | Yes | The name of the ADF instance |
+| api-version | string | Yes | The version of the API to use |
+
+The request can also include additional filters to narrow down the results by including the following parameters in the body of the request:
+
+```
+{
+ "lastUpdatedAfter": "2022-08-18T00:00:00Z",
+ "lastUpdatedBefore": "2022-08-19T00:00:00Z"
+}
+```
+The above example will filter the results to only include pipeline runs that were last updated between August 18th 2022 and August 19th 2022.
+
+### Response Data
+The response will be a JSON object containing an array of pipeline run data details objects. Each object will include the following properties:
+
+| Name | Type | Description |
+|---|---|---|
+| pipelineName | string | The name of the pipeline that was run |
+| errors | object[] | An array of error objects, each containing the error message and code |
+| rowsRead | number | The number of rows read by the pipeline |
+| rowsWritten | number | The number of rows written by the pipeline |
+| executionDuration | string | The duration of the pipeline run in ISO 8601 format |
+
+### Authentication
+Authentication is required to access the API endpoint. This can be done by obtaining an Access Token using Azure Active Directory authentication.
+
+### Example Request
+```
+POST https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/TestRG/providers/Microsoft.DataFactory/factories/TestADF/pipelineruns/queryPipelineRuns?api-version=2018-06-01
+
+Authorization: Bearer {Access Token}
+Content-Type: application/json
+
+{
+ "lastUpdatedAfter": "2022-08-18T00:00:00Z",
+ "lastUpdatedBefore": "2022-08-19T00:00:00Z"
+}
+```
+
+### Example Response
+```
+{
+   "value": [
+      {
+         "pipelineName": "MyPipeline",
+         "errors": [
+            {
+               "errorCode": "2303",
+               "message": "Error executing activity: Invalid column name 'EmailAddress'."
+            }
+         ],
+         "rowsRead": 1000,
+         "rowsWritten": 995,
+         "executionDuration": "PT5M"
+      },
+      {
+         "pipelineName": "MyOtherPipeline",
+         "errors": [],
+         "rowsRead": 2500,
+         "rowsWritten": 2500,
+         "executionDuration": "PT10M"
+      }
+   ]
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Here's a document that explains what you are trying to achieve by creating a pipeline in Adf using the Azure REST API and retrieving pipeline run data:
+
+## Purpose
+
+The purpose of creating a pipeline in Azure Data Factory (Adf) using the Azure REST API is to easily retrieve pipeline run data details such as name, error, row count, etc., which can help you analyze the current state of your pipeline. By analyzing this data, you can identify any errors or performance issues affecting the system.
+
+## Benefits
+
+There are several benefits to using the Azure REST API for Adf pipelines, including:
+
+- Ease of use: The Azure REST API provides a simple and straightforward way to create and manage Adf pipelines.
+
+- Customization options: Using the Azure REST API, you can customize your pipeline runs to suit your specific needs.
+
+- Automation capabilities: The Azure REST API allows you to automate the creation and management of Adf pipelines, saving you time and effort.
+
+- Greater visibility: By retrieving pipeline run data via the Azure REST API, you gain greater insight into the performance and efficiency of your pipeline, helping you optimize it for maximum results.
+
+## Conclusion
+
+In conclusion, creating an Azure Data Factory pipeline using the Azure REST API and retrieving pipeline run data details can provide significant benefits to your workflow. By leveraging these tools, you can make sure your pipeline is running smoothly, identify potential problems early on, and optimize your system for better performance.
