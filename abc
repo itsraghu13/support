@@ -412,3 +412,50 @@ print('Total pipeline runs retrieved:', len(pipeline_runs))
 print(pipeline_runs)
 
 https://github.com/maxcarduner/spotify-recommender
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import requests
+
+def fetch_pipeline_runs(url, headers, body=None):
+    response = requests.post(url, headers=headers, json=body)
+    return response.json()
+
+def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, last_updated_after, last_updated_before, access_token):
+    queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01"
+
+    headers = {'Authorization': 'Bearer ' + access_token, 'Content-Type': 'application/json'}
+
+    request_body = {
+        'lastUpdatedAfter': last_updated_after,
+        'lastUpdatedBefore': last_updated_before
+    }
+
+    response = fetch_pipeline_runs(queryPipelineRuns_URL, headers, body=request_body)
+    pipeline_runs = response.get('value', [])
+    data = [{'pipelineName': run['pipelineName'], 'runId': run['runId']} for run in pipeline_runs]
+
+    continuation_token = response.get('continuationToken')
+
+    while continuation_token:
+        url_with_token = queryPipelineRuns_URL + f"&continuationToken={continuation_token}"
+        response = fetch_pipeline_runs(url_with_token, headers)
+        pipeline_runs = response.get('value', [])
+        data.extend([{'pipelineName': run['pipelineName'], 'runId': run['runId']} for run in pipeline_runs])
+        continuation_token = response.get('continuationToken')
+
+    return data
+
