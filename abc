@@ -655,3 +655,77 @@ def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, la
     return filtered_runs
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import requests
+
+def fetch_pipeline_runs(url, headers, body=None):
+    response = requests.post(url, headers=headers, json=body)
+    return response.json()
+
+def filter_pipeline_runs(pipeline_runs, last_updated_after, last_updated_before):
+    filtered_runs = []
+    for run in pipeline_runs:
+        run_start = run['runStart']
+        run_end = run['runEnd']
+        if last_updated_after <= run_end and last_updated_before >= run_start:
+            filtered_runs.append({'pipelineName': run['pipelineName'], 'runId': run['runId']})
+    return filtered_runs
+
+def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, last_updated_after, last_updated_before, access_token):
+    queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01"
+
+    headers = {'Authorization': 'Bearer ' + access_token}
+
+    request_body = {
+        'lastUpdatedAfter': last_updated_after,
+        'lastUpdatedBefore': last_updated_before,
+        'filters': [
+            {
+                'operand': 'RunStart',
+                'operator': 'Equals',
+                'values': [last_updated_after]
+            },
+            {
+                'operand': 'RunEnd',
+                'operator': 'Equals',
+                'values': [last_updated_before]
+            }
+        ]
+    }
+
+    response = fetch_pipeline_runs(queryPipelineRuns_URL, headers, body=request_body)
+    pipeline_runs = response.get('value', [])
+
+    filtered_runs = filter_pipeline_runs(pipeline_runs, last_updated_after, last_updated_before)
+
+    continuation_token = response.get('continuationToken')
+
+    while continuation_token:
+        url_with_token = queryPipelineRuns_URL + f"&continuationToken={continuation_token}"
+        response = fetch_pipeline_runs(url_with_token, headers)
+        pipeline_runs = response.get('value', [])
+        filtered_runs.extend(filter_pipeline_runs(pipeline_runs, last_updated_after, last_updated_before))
+        continuation_token = response.get('continuationToken')
+
+    return filtered_runs
+
+
+
