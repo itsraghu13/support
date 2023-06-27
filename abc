@@ -729,3 +729,19 @@ def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, la
 
 
 
+
+import re
+
+data = """
+
+"""
+
+# Extract the continuation token using regular expressions
+match = re.search(r'"token"\s*:\s*"(.+?)"', data)
+if match:
+    continuation_token = match.group(1)
+    print("Continuation Token:", continuation_token)
+else:
+    print("Continuation Token not found in the data.")
+
+
