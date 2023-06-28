@@ -1,0 +1,138 @@
+import requests
+import re
+import concurrent.futures
+
+def fetch_pipeline_runs(url, headers, body=None):
+    response = requests.post(url, headers=headers, json=body, stream=True)
+    response.raise_for_status()
+    return response.json()
+
+def get_token(continuation_token):
+    if continuation_token is not None:
+        match = re.search(r'"token"\s*:\s*"(.+?)"', continuation_token)
+        if match:
+            continuation_token = match.group(1)
+    return continuation_token
+
+def filter_pipeline_runs(pipeline_runs, last_updated_after, last_updated_before):
+    filtered_runs = []
+    for run in pipeline_runs:
+        if run['status'] != 'InProgress':
+            run_start = run['runStart']
+            run_end = run['runEnd']
+            filtered_runs.append({
+                'pipelineName': run['pipelineName'],
+                'runId': run['runId'],
+                'start_time': run_start,
+                'end_time': run_end
+            })
+    return filtered_runs
+
+def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, last_updated_after, last_updated_before, access_token, num_threads=1):
+    queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01"
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-type': 'application/json'
+    }
+    data = []
+    continuation_token = None
+
+    while True:
+        request_body = {
+            "lastUpdatedAfter": last_updated_after,
+            "lastUpdatedBefore": last_updated_before,
+            "continuationToken": continuation_token,
+            "filters": [
+                {
+                    "operand": "RunStart",
+                    "operator": "GreaterThan",
+                    "values": [last_updated_after]
+                },
+                {
+                    "operand": "RunEnd",
+                    "operator": "LessThan",
+                    "values": [last_updated_before]
+                }
+            ]
+        }
+
+        response = fetch_pipeline_runs(queryPipelineRuns_URL, headers, request_body)
+        pipeline_runs = response.get('value', [])
+        filtered_runs = filter_pipeline_runs(pipeline_runs, last_updated_after, last_updated_before)
+        data.extend(filtered_runs)
+        continuation_token = get_token(response.get('continuationToken', None))
+        if not continuation_token:
+            break
+
+    return data
+
+def fetch_pipeline_runs_parallel(url, headers, body=None, num_threads=1):
+    response = requests.post(url, headers=headers, json=body, stream=True)
+    response.raise_for_status()
+    return response
+
+def get_all_pipeline_runs_parallel(subscription_id, resource_group_name, factory_name, last_updated_after, last_updated_before, access_token, num_threads=1):
+    queryPipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.DataFactory/factories/{factory_name}/queryPipelineRuns?api-version=2018-06-01"
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-type': 'application/json'
+    }
+    data = []
+    continuation_token = None
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+        while True:
+            request_body = {
+                "lastUpdatedAfter": last_updated_after,
+                "lastUpdatedBefore": last_updated_before,
+                "continuationToken": continuation_token,
+                "filters": [
+                    {
+                        "operand": "RunStart",
+                        "operator": "GreaterThan",
+                        "values" : [last_updated_after]
+                },
+                {
+                    "operand": "RunEnd",
+                    "operator": "LessThan",
+                    "values": [last_updated_before]
+                }
+            ]
+        }
+
+            futures = []
+            with executor:
+                response = executor.submit(fetch_pipeline_runs_parallel, queryPipelineRuns_URL, headers, request_body, num_threads)
+                futures.append(response)
+
+            for future in concurrent.futures.as_completed(futures):
+                response = future.result()
+                pipeline_runs = response.json().get('value', [])
+                filtered_runs = filter_pipeline_runs(pipeline_runs, last_updated_after, last_updated_before)
+                data.extend(filtered_runs)
+                continuation_token = get_token(response.json().get('continuationToken', None))
+                if not continuation_token:
+                    break
+
+    return data
+
+subscription_id = 'your_subscription_id'
+resource_group_name = 'your_resource_group_name'
+factory_name = 'your_factory_name'
+last_updated_after = '2023-06-27T02:19:56.853843Z'
+last_updated_before = '2023-06-28T02:19:56.853843Z'
+access_token = 'your_access_token'
+
+# Single-threaded version
+pipeline_runs = get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, last_updated_after, last_updated_before, access_token)
+
+# Multi-threaded version with 5 threads
+pipeline_runs_parallel = get_all_pipeline_runs_parallel(subscription_id, resource_group_name, factory_name, last_updated_after, last_updated_before, access_token, num_threads=5)
+
+
+
+In the updated code, I've added a parallel processing option using concurrent.futures.ThreadPoolExecutor. This allows you to fetch pipeline runs concurrently using multiple threads. The num_threads parameter specifies the number of threads to use (default is 1 for single-threaded execution).
+
+To use the parallel version, call the get_all_pipeline_runs_parallel function with the desired number of threads. The result will be stored in the pipeline_runs_parallel variable.
+
+Note that parallel execution may have different behavior and performance characteristics depending on your specific use case and the API you're interacting with. It's recommended to test and benchmark the code with different configurations to determine the optimal number of threads for your scenario.
