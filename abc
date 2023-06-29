@@ -747,3 +747,55 @@ else:
     print("Continuation Token not found in the data.")
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if len(run_list) > 0:
+    headers = {'Authorization': 'Bearer ' + access_token}
+    query_activity_uri = 'https://management.azure.com/subscriptions/(l/resourceGroups/(l/providers/Microsoft.DataFactory/factories/(/pipelineru'
+
+    for run_item in run_list:
+        pipeline_runs = get_pipeline_runs(query_activity_uri, headers)
+
+        if pipeline_runs is not None:
+            activity_result = get_activity_output_data(pipeline_runs, run_item['runId'])
+            parent_id = get_parent_id_recursive(run_item['runId'])
+
+            if activity_result:
+                df = spark.createDataFrame(activity_result, schema)
+                parent_run_id = parent_id if parent_id else 'NA'
+                requested_date = current_date()
+
+                df = df.withColumn("Parent RunId", lit(parent_run_id)).withColumn("Requested Date", lit(requested_date))
+
+                parameters_data = get_parameters_data(run_item['runId'])
+
+                if spark.catalog.tableExists("structured._meta_copyactivities"):
+                    df.createOrReplaceTempView('temp_copyactivities')
+                    sql_query_upsert = f'MERGE INTO structured._meta_copyactivities AS target USING temp_copyactivities AS source ON target.RunID = source.RunID WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT *'
+                    spark.sql(sql_query_upsert)
+                else:
+                    df.write.format("delta").mode("append").option("overwriteSchema", "true").saveAsTable('structured._meta_copyactivities')
+        else:
+            raise Exception('get_pipeline_runs did not return anything')
+else:
+    raise Exception('run_list is empty')
