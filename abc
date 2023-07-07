@@ -1,14 +1,22 @@
 import multiprocessing
 
 def process_item(item):
-    queryActivity_URL = 'https://management.azure.com/subscriptions/(l/resourceGroups/(l/providers/Microsoft.DataFactory/factories/(/pipelineru'
+    subscription_id = "your_subscription_id"
+    resource_GroupName = "your_resource_group_name"
+    factory_name = "your_factory_name"
+    start_time = "your_start_time"
+    end_time = "your_end_time"
+    pipeline_name = item['pipelineName']
+    run_id = item['runId']
+
+    queryActivity_URL = f'https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/pipelineruns/{run_id}/queryActivityruns?api-version=2018-06-01&startTime={start_time}&endTime={end_time}&pipelineName={pipeline_name}'
     headers = {'Authorization': 'Bearer ' + access_token}
 
     pipeline_runs = get_pipeline_runs(queryActivity_URL, headers)
 
     if pipeline_runs is not None:
-        result = get_activity_output_data(pipeline_runs, item['runId'])
-        P_id = get_parent_id_recursive(item['runId'])
+        result = get_activity_output_data(pipeline_runs, run_id)
+        P_id = get_parent_id_recursive(run_id)
 
         if result:
             df = spark.createDataFrame(result, schema)
@@ -20,7 +28,7 @@ def process_item(item):
         else:
             return
 
-        df_parmetes_data = get_parameters_data(item['runId'])
+        df_parmetes_data = get_parameters_data(run_id)
 
         if spark.catalog.tableExists("meta"):
             table_exists = True
@@ -43,6 +51,7 @@ if len(run_list) > 0:
     pool.join()
 else:
     raise Exception('get_pipeline_list returned empty')
+
 
 
 
