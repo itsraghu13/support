@@ -1,3 +1,76 @@
+def process_partition(partition, subscription_id, resource_group_name, factory_name, start_time, end_time, access_token):
+    # Initialize Spark session
+    spark = SparkSession.builder.getOrCreate()
+
+    # Get pipeline runs for the partition
+    pipeline_runs = []
+    for item in partition:
+        run_id = item['runId']
+        pipeline_name = item.get('pipelineName', '')
+
+        queryActivity_URL = f'https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.DataFactory/factories/{factory_name}/pipelineruns/{run_id}/queryActivityruns?api-version=2018-06-01&startTime={start_time}&endTime={end_time}&pipelineName={pipeline_name}'
+        headers = {'Authorization': 'Bearer ' + access_token}
+
+        # Get pipeline run details for given pipelineName and run id
+        pipeline_run = get_pipeline_runs(queryActivity_URL, headers)
+        if pipeline_run is not None:
+            pipeline_runs.append(pipeline_run)
+
+    # Process pipeline runs
+    for pipeline_run in pipeline_runs:
+        run_id = pipeline_run['runId']
+        result = get_activity_output_data(pipeline_run, run_id)
+        P_id = get_parent_id_recursive(run_id)
+
+        if result:
+            df = spark.createDataFrame(result, schema)
+
+            if P_id:
+                df = df.withColumn("Parent RunId", lit(P_id)).withColumn("requested date", lit(current_date()))
+            else:
+                df = df.withColumn("Parent RunId", lit('NA')).withColumn("requested date", lit(current_date()))
+
+            df_parameter_data = get_parameters_data(run_id)
+
+            if spark.catalog.tableExists("structured._meta_copyactivities"):
+                df.createOrReplaceTempView('temp_copyactivities')
+                sql_query_upsert = f'MERGE INTO structured._meta_copyactivities AS target USING temp_copyactivities AS source ON target.RunID = source.RunID WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT *'
+                spark.sql(sql_query_upsert)
+            else:
+                df.write.format("delta").mode("append").option("overwriteSchema", "true").saveAsTable('structured._meta_copyactivities')
+        else:
+            print("Result is empty for run_id:", run_id)
+
+def main():
+    subscription_id = "YOUR_SUBSCRIPTION_ID"
+    resource_group_name = "YOUR_RESOURCE_GROUP_NAME"
+    factory_name = "YOUR_FACTORY_NAME"
+    start_time = "YOUR_START_TIME"
+    end_time = "YOUR_END_TIME"
+    access_token = "YOUR_ACCESS_TOKEN"
+
+    if len(run_list) > 0:
+        spark = SparkSession.builder.getOrCreate()
+        sc = spark.sparkContext
+
+        # Convert run_list to RDD
+        run_rdd = sc.parallelize(run_list)
+
+        # Process each partition in parallel
+        run_rdd.foreachPartition(lambda partition: process_partition(partition, subscription_id, resource_group_name, factory_name, start_time, end_time, access_token))
+    else:
+        raise Exception('get_pipeline_list returned empty')
+
+if __name__ == '__main__':
+    main()
+
+
+
+
+
+
+
+
 import multiprocessing
 
 def process_item(item):
