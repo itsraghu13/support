@@ -1,3 +1,7 @@
+
+"CAST(SUBSTRING_INDEX(duration, ' ', 1) AS INT) * 60 + " +
+  "CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(duration, ' ', -2), ' ', 1) AS INT)"
+
 def process_partition(partition, subscription_id, resource_group_name, factory_name, start_time, end_time, access_token):
     # Initialize Spark session
     spark = SparkSession.builder.getOrCreate()
