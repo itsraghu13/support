@@ -2,6 +2,57 @@ https://learn.microsoft.com/en-us/answers/questions/705328/get-bearer-token-for-
 
 https://learn.microsoft.com/en-us/answers/questions/659904/get-authorization-bearer-token-for-azure-managemen
 
+import requests
+import json
+
+def get_parent_id_recursive(input_id):
+    # Construct request URL using input parameters
+    pipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/pipelineruns/{input_id}?api-version=2018-06-01"
+    
+    # Set headers with access token
+    headers = {"Authorization": "Bearer " + access_token}
+    
+    # Send GET request to Azure API and load data into JSON object
+    response = requests.get(pipelineRuns_URL, headers=headers)
+    parameters_data = json.loads(response.text)
+    
+    # Initialize variables for parent ID and previous ID
+    parent_id = None
+    previous_id = None
+    
+    # Loop through JSON object and check for activity that invoked the current pipeline run
+    for key, value in parameters_data.items():
+        if key == "invokedBy" and value["invokedByType"] != "Manual":
+            current_id = value['pipelineRunId']
+            if previous_id is not None:
+                parent_id = previous_id  # Assign the previous ID as the parent ID
+            previous_id = current_id
+            
+            # Recursively call function to find the next parent ID
+            parent_id = get_parent_id_recursive(current_id)
+            break
+        
+    # If no parent activity is found or we reached the last level, return the current parent ID
+    if parent_id is None:
+        parent_id = previous_id
+        
+    return parent_id
+
+parent_id = get_parent_id_recursive(input_id)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def get_activity_output_data(activity_runs, pipeline_runId, pipelinename):
