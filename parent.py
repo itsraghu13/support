@@ -36,3 +36,58 @@ def get_parent_id_recursive(input_id):
         parent_name = "None"
         
     return parent_id, parent_name
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import requests
+import json
+
+def get_parent_id_recursive(input_id):
+    # Construct request URL using input parameters
+    pipelineRuns_URL = f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_GroupName}/providers/Microsoft.DataFactory/factories/{factory_name}/pipelineruns/{input_id}?api-version=2018-06-01"
+    
+    # Set headers with access token
+    headers = {"Authorization": "Bearer " + access_token}
+    
+    # Send GET request to Azure API and load data into JSON object
+    response = requests.get(pipelineRuns_URL, headers=headers)
+    parameters_data = json.loads(response.text)
+    
+    # Initialize variables for parent ID and parent name
+    parent_id = None
+    parent_name = None
+    
+    # Check if the pipeline run was invoked by an activity
+    if "invokedBy" in parameters_data and parameters_data["invokedBy"]["invokedByType"] != "Manual":
+        parent_id = parameters_data["invokedBy"]["pipelineRunId"]
+        
+        # Recursively call function to find the top-level parent ID and name
+        parent_id, parent_name = get_parent_id_recursive(parent_id)
+    
+    # If no parent activity is found, return the input ID as the parent ID
+    else:
+        parent_id = input_id
+    
+    # Retrieve the name of the current pipeline run
+    if "name" in parameters_data:
+        parent_name = parameters_data["name"]
+    
+    return parent_id, parent_name
+
