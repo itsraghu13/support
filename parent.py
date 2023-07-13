@@ -75,14 +75,23 @@ def get_parent_id_recursive(input_id):
     parent_name = None
     
     # Check if the pipeline run was invoked by an activity
-    if "invokedBy" in parameters_data and parameters_data["invokedBy"]["invokedByType"] != "Manual":
-        parent_id = parameters_data["invokedBy"]["pipelineRunId"]
-        
-        # Recursively call function to find the top-level parent ID and name
-        parent_id, parent_name = get_parent_id_recursive(parent_id)
+    if "invokedBy" in parameters_data:
+        invoked_by = parameters_data["invokedBy"]
+        if isinstance(invoked_by, list):
+            # If there are multiple levels of invocation, iterate through each level
+            for level in invoked_by:
+                if level["invokedByType"] != "Manual":
+                    parent_id = level["pipelineRunId"]
+                    parent_id, parent_name = get_parent_id_recursive(parent_id)
+                    break
+        elif isinstance(invoked_by, dict):
+            # If there is only one level of invocation
+            if invoked_by["invokedByType"] != "Manual":
+                parent_id = invoked_by["pipelineRunId"]
+                parent_id, parent_name = get_parent_id_recursive(parent_id)
     
     # If no parent activity is found, return the input ID as the parent ID
-    else:
+    if not parent_id:
         parent_id = input_id
     
     # Retrieve the name of the current pipeline run
