@@ -52,3 +52,14 @@ for item in run_list:
 
 for thread in threads:
     thread.join()
+
+
+def run_pipeline_runs(run_list):
+    batches = []
+    for i in range(0, len(run_list), 100):
+        batch = run_list[i:i + 100]
+        batches.append(batch)
+
+    for batch in batches:
+        run_pipeline_run(batch)
+
