@@ -100,3 +100,78 @@ def get_parent_id_recursive(input_id):
     
     return parent_id, parent_name
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+from concurrent.futures import ThreadPoolExecutor
+
+def process_item(item):
+    queryActivity_URI = 'https://management.azure.com/subscriptions/(l/resourceGroups/(l/providers/Microsoft.DataFactory/factories/(/pipelineru'
+    headers = {'Authorization': 'Bearer ' + access_token}
+
+    pipeline_runs = get_pipeline_runs(queryActivity_URL, headers)
+
+    if pipeline_runs is not None:
+        result = get_activity_output_data(pipeline_runs, item['runId'])
+
+        P_id = get_parent_id_recursive(item['runId'])
+
+        if result:
+            df = spark.createDataFrame(result, schema)
+
+            if P_id:
+                df = df.withColumn("Parent RunId", lit(P_id)).withColumn("requested date", lit(current_date()))
+            else:
+                df = df.withColumn("Parent_ RunId", lit('NA')).withColumn("requested date", lit(current_date()))
+        else:
+            return None
+
+        df_parmetes_data = get_parameters_data(item['runId'])
+
+        table_exists = spark.catalog.tableExists("structured._meta_copyactivities")
+
+        if table_exists:
+            df.createOrReplaceTempView('temp_copyactivities')
+            sql_query_upsert = f'MERGE INTO structured._meta_copyactivities AS target USING temp_copyactivities AS source ON target.RunID = source.RunID WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT *'
+            spark.sql(sql_query_upsert)
+        else:
+            df.write.format("delta").mode("append").option("overwriteSchema", "true").saveAsTable('structured._meta_copyactivities')
+
+    return item['runId']
+
+if len(run_list) > 0:
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(process_item, item) for item in run_list]
+        completed_tasks = [future.result() for future in futures if future.result() is not None]
+
+    if not completed_tasks:
+        raise Exception('get_pipeline_list returned empty')
+else:
+    raise Exception('get_pipeline_list returned empty')
+
+
