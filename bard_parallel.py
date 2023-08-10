@@ -232,3 +232,91 @@ for thread in threads:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import threading
+import api_semaphore  # Make sure you have this library imported
+
+# Create a semaphore with a limited number of permits
+max_concurrent_threads = 1
+semaphore = api_semaphore.Semaphore(max_concurrent_threads)
+
+# Create a barrier to wait until all operations are completed
+barrier = threading.Barrier(max_concurrent_threads + 1)  # +1 for the main thread
+
+def run_pipeline_run(item, resource_group_name, subscription_id):
+    queryActivity_URI = 'https://management.azure.com/subscriptions/{}/resourceGroups/{}/providers/Microsoft.DataFactory/factories/{}/pipelineruns/{}'.format(
+        subscription_id, resource_group_name, item['factoryName'], item['runId'])
+    headers = {'Authorization': 'Bearer ' + access_token}
+
+    # Get pipeline run details for the given pipelineName and run id
+    pipeline_runs = get_pipeline_runs(queryActivity_URI, headers)
+
+    if pipeline_runs is not None:
+        # Get Pipeline Copy Activity details
+        result = get_activity_output_data(pipeline_runs, item['runId'])
+
+        # Get parent id for given run id
+        P_id = get_parent_id_recursive(item['runId'])
+
+        if result:
+            df = spark.createDataFrame(result, schema)
+
+            if P_id:
+                df = df.withColumn("Parent RunId", lit(P_id)).withColumn("requested date", lit(current_date()))
+            else:
+                df = df.withColumn("Parent_ RunId", lit('NA')).withColumn("requested date", lit(current_date()))
+        else:
+            return
+
+        df_parmetes_data = get_parameters_data(item['runId'])
+
+        with semaphore:
+            if spark.catalog.tableExists("structured._meta_copyactivities"):
+                df.createOrReplaceTempView('temp_copyactivities')
+                sql_query_upsert = f'MERGE INTO structured._meta_copyactivities AS target USING temp_copyactivities AS source ON target.RunID = source.RunID WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT *'
+                spark.sql(sql_query_upsert)
+            else:
+                df.write.format("delta").mode("append").option("overwriteSchema", "true").saveAsTable('structured._meta_copyactivities')
+
+    # Wait for all operations to complete before releasing the semaphore
+    barrier.wait()
+    semaphore.release()
+
+# Split run_list into batches of 5
+batch_size = 5
+batched_run_list = [run_list[i:i + batch_size] for i in range(0, len(run_list), batch_size)]
+
+for batch in batched_run_list:
+    threads = []
+    for item in batch:
+        thread = threading.Thread(target=run_pipeline_run, args=(item, resource_group_name, subscription_id))
+        thread.start()
+        threads.append(thread)
+
+    # Wait for all threads to complete before moving to the next batch
+    for thread in threads:
+        thread.join()
+
+
+
+
