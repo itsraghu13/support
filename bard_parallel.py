@@ -135,3 +135,100 @@ for thread in threads:
     thread.join()
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import threading
+
+def wait_for_update_or_insert(table_name):
+    while True:
+        if spark.catalog.tableExists(table_name):
+            return
+        time.sleep(5)
+
+def run_pipeline_run(item, resource_group_name, subscription_id):
+    semaphore = api_semaphore.Semaphore(10)
+
+    with semaphore:
+        queryActivity_URI = 'https://management.azure.com/subscriptions/{}/resourceGroups/{}/providers/Microsoft.DataFactory/factories/{}/pipelineru'.format(
+            subscription_id, resource_group_name, item['factoryName'])
+        headers = {'Authorization': 'Bearer ' + access_token}
+
+        # Get pipeline run details for given pipelineName and run id
+        pipeline_runs = get_pipeline_runs(queryActivity_URL, headers)
+
+        if pipeline_runs is not None:
+            # Get Pipeline Copy Activity details
+            result = get_activity_output_data(pipeline_runs, item['runId'])
+
+            # Get parent id for given run id
+            P_id = get_parent_id_recursive(item['runId'])
+
+            if result:
+                df = spark.createDataFrame(result, schema)
+
+                if P_id:
+                    df = df.withColumn("Parent RunId", lit(P_id)).withColumn("requested date", lit(current_date()))
+                else:
+                    df = df.withColumn("Parent_ RunId", lit('NA')).withColumn("requested date", lit(current_date()))
+            else:
+                return
+
+            df_parmetes_data = get_parameters_data(item['runId'])
+
+            if spark.catalog.tableExists("structured._meta_copyactivities"):
+                table_exists = True
+            else:
+                table_exists = False
+
+            if table_exists:
+                df.createOrReplaceTempView('temp_copyactivities')
+                sql_query_upsert = f'MERGE INTO structured._meta_copyactivities AS target USING temp_copyactivities AS source ON target.RunID = source.RunID WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT *'
+                while not wait_for_update_or_insert("structured._meta_copyactivities"):
+                    pass
+                spark.sql(sql_query_upsert)
+            else:
+                df.write.format("delta").mode("append").option("overwriteSchema", "true").saveAsTable('structured._meta_copyactivities')
+
+threads = []
+
+for item in run_list:
+    semaphore.acquire()
+    thread = threading.Thread(target=run_pipeline_run, args=(item, resource_group_name, subscription_id))
+    thread.start()
+    threads.append(thread)
+
+for thread in threads:
+    thread.join()
+    semaphore.release()
+
+
+
