@@ -15,19 +15,7 @@ def get_parameters_data(pipeline_runId):
     
     response = requests.get(parameter_adf_URI, headers=headers)
     data = json.loads(response.text)
-    # spark = SparkSession.builder.getOrCreate()
     df = spark.read.json(spark.sparkContext.parallelize([json.dumps(data)]))
-    
-    df = df.select(
-        col('runId'),
-        col('pipelineName').alias('pipeline_name'),
-        col('parameters'),
-        col('message').alias('error'),
-        col('runStart').alias('start_time'),
-        col('runEnd').alias('end_time'),
-        col('durationInMs'),
-        col('status')
-    )
     
     df.createOrReplaceTempView("tempDF")
     
@@ -53,20 +41,16 @@ def get_parameters_data(pipeline_runId):
         f"current_date() as requested_date FROM tempDF"
     )
     
-    df_combined = spark.sql(sql_query)
-    collected_data.append(df_combined.collect())  # Collect the data
+    # Use foreach() to process the data
+    df.foreach(lambda row: collected_data.append(row))
 
 # Call the function with a valid pipeline_runId
 get_parameters_data("<pipeline_runId>")
 
 # Process all collected data
 if collected_data:
-    all_collected_rows = []
-    for data in collected_data:
-        all_collected_rows.extend(data)
-    
     # Combine all rows into a DataFrame
-    collected_df = spark.createDataFrame(all_collected_rows)
+    collected_df = spark.createDataFrame(collected_data)
     
     # Create a temporary table to hold the DataFrame
     temp_table_name = "temp_pipelines_table"
