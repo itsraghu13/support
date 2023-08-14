@@ -45,3 +45,32 @@ if collected_data:
         spark.sql(sql_query_upsert)
     else:
         collected_df.write.format("delta").mode("append").option("overwriteSchema", "true").saveAsTable("structured.t_meta_copyactivities")
+
+
+
+# After collecting data from all runids, create a DataFrame and insert into the table
+if collected_data:
+    data_rows = []
+    for data in collected_data:
+        result, parent_id, parent_name, requested_date = data
+        for row_dict in result:
+            # Add additional values to the dictionary
+            row_dict["parent_id"] = parent_id
+            row_dict["parent_name"] = parent_name
+            row_dict["requested_date"] = requested_date
+            data_rows.append(row_dict)
+    
+    collected_df = spark.createDataFrame(data_rows, schema)
+    
+    table_exists = check_table_exists("structured.t_meta_copyactivities")
+    if table_exists:
+        collected_df.createOrReplaceTempView("temp_copyactivities")
+        sql_query_upsert = """
+            MERGE INTO structured.t_meta_copyactivities_123
+            AS target USING temp_copyactivities AS source
+            ON target.activityrunid = source.activityrunid
+            """
+        spark.sql(sql_query_upsert)
+    else:
+        collected_df.write.format("delta").mode("append").option("overwriteSchema", "true").saveAsTable("structured.t_meta_copyactivities")
+
