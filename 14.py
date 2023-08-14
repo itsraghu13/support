@@ -194,3 +194,65 @@ if collected_data:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+# After collecting data from all runids, create a DataFrame and insert into the table
+if collected_data:
+    data_rows = []
+    
+    # Determine all possible column names
+    possible_columns = set()
+    for data in collected_data:
+        result, _, _, _ = data
+        for row_dict in result:
+            possible_columns.update(row_dict.keys())
+    
+    # Create a dynamic schema based on possible columns
+    dynamic_schema = StructType([StructField(col_name, StringType(), True) for col_name in possible_columns])
+    
+    for data in collected_data:
+        result, parent_id, parent_name, requested_date = data
+        for row_dict in result:
+            row_dict["parent_id"] = parent_id
+            row_dict["parent_name"] = parent_name
+            row_dict["requested_date"] = requested_date
+            data_rows.append(row_dict)
+    
+    # Create a list of Row objects
+    row_objects = [Row(**row_dict) for row_dict in data_rows]
+    
+    # Create a DataFrame directly from the list of Row objects and dynamic schema
+    collected_df = spark.createDataFrame(row_objects, dynamic_schema)
+    
+    # Create a temporary table to hold the DataFrame
+    temp_table_name = "temp_copyactivities_table"
+    collected_df.createOrReplaceTempView(temp_table_name)
+    
+    # Perform the merge operation using SQL
+    table_exists = check_table_exists("structured.t_meta_copyactivities")
+    if table_exists:
+        sql_query_upsert = f"""
+            MERGE INTO structured.t_meta_copyactivities_123
+            AS target USING {temp_table_name} AS source
+            ON target.activityrunid = source.activityrunid
+            """
+        spark.sql(sql_query_upsert)
+    else:
+        collected_df.write.format("delta").mode("append").option("overwriteSchema", "true").saveAsTable("structured.t_meta_copyactivities")
+    
+    # Drop the temporary table
+    spark.catalog.dropTempView(temp_table_name)
+
+
+
+
