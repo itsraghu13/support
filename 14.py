@@ -256,3 +256,65 @@ if collected_data:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def get_activity_output_data(activity_runs, pipeline_runId):
+    """
+    This function takes in a list of activity runs and a pipeline run ID.
+    It filters the activity runs to only keep those with activityType "Copy".
+    For each "Copy" activity, it extracts the output data ("rowsRead", "dataRead", "rowsCopied", "dataWritten")
+    and creates a dictionary containing relevant information such as run ID, and activity name.
+    The dictionaries are appended to a result list.
+    At the end, the function returns the result list.
+    """
+
+    # Initialize an empty list to store the dictionaries with relevant information
+    result = []
+    
+    # Loop through each activity in the activity_runs list
+    for activity in activity_runs:
+        
+        # Check if the activity is of type "Copy" and has status "Succeeded"
+        if activity["activityType"] == "Copy" and activity["status"] == "Succeeded":
+            
+            # Get the output of the current activity
+            output = activity["output"]
+            
+            # Determine the values to use for "rowsRead", "dataRead", "rowsWritten", and "dataWritten"
+            rows_read = output.get("rowsRead", 0)
+            data_read = output.get("dataRead", 0)
+            rows_written = output.get("rowsCopied", 0)
+            data_written = output.get("dataWritten", 0)
+            
+            # Create a dictionary containing relevant information
+            activity_data = {
+                "RunID": pipeline_runId,
+                "RowsRead": rows_read,
+                "DataRead": data_read,
+                "RowsWritten": rows_written,
+                "DataWritten": data_written,
+                "ActivityName": activity["activityName"]
+            }
+            
+            # Append the activity_data dictionary to the result list
+            result.append(activity_data)
+    
+    # Once all activities have been processed, return the list of dictionaries with relevant information
+    return result
+
+
+
+
+
