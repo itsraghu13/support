@@ -74,3 +74,61 @@ if collected_data:
     
     # Drop the temporary table
     spark.catalog.dropTempView(temp_table_name)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    df_combined.collect())
+
+# Process all collected data from get_parameters_data function
+if collected_data_parameters:
+    all_collected_rows_parameters = []
+    for data in collected_data_parameters:
+        all_collected_rows_parameters.extend(data)
+    
+    # Combine all rows into a DataFrame
+    collected_df_parameters = spark.createDataFrame(all_collected_rows_parameters)
+    
+    # Create a temporary table to hold the DataFrame
+    temp_table_name_parameters = "temp_pipelines_table"
+    collected_df_parameters.createOrReplaceTempView(temp_table_name_parameters)
+    
+    # Perform the merge operation using SQL
+    table_name_parameters = "<table_name_parameters>"
+    table_exists_parameters = spark.catalog.tableExists(table_name_parameters)
+    
+    if table_exists_parameters:
+        sql_query_upsert_parameters = f"""
+            MERGE INTO {table_name_parameters} AS target
+            USING {temp_table_name_parameters} AS source
+            ON target.runId = source.runId
+            WHEN MATCHED THEN UPDATE SET *
+            WHEN NOT MATCHED THEN INSERT *
+        """
+        spark.sql(sql_query_upsert_parameters)
+    else:
+        collected_df_parameters.write.format("delta").mode("append").saveAsTable(table_name_parameters)
+    
+    # Drop the temporary table
+    spark.catalog.dropTempView(temp_table_name_parameters)
+
