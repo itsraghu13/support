@@ -7,6 +7,9 @@
         )
 
 
+df = df.withColumn('parameters', col('parameters') if 'parameters' in df.columns else json_lit({}))
+
+
 
 
 
