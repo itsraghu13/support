@@ -1,3 +1,18 @@
+
+  parameter_cols = []
+    for col_name in df.select('parameters.*').columns:
+        parameter_cols.append(
+            f"CASE WHEN parameters.`{col_name.split('.')[-1]}` IS NOT NULL THEN "
+            f"concat('{col_name.split('.')[-1]}:', parameters.`{col_name.split('.')[-1]}`) ELSE '' END"
+        )
+
+
+
+
+
+
+
+
 import requests
 import json
 from pyspark.sql import SparkSession
