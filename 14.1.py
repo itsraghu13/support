@@ -317,5 +317,74 @@ def get_parameters_data(pipeline_runId):
         df_combined.write.format("delta").mode("append").saveAsTable(table_name)
 
 
+import requests
+import json
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, concat_ws, current_date
+
+def get_parameters_data(pipeline_runId):
+    parameter_adf_URI = f'https://management.azure.com/subscriptions/<subscription_id>/resourceGroups/<resource_GroupName>/providers/Microsoft.DataFactory/factories/<factory_name>/pipelineruns/{pipeline_runId}?api-version=2018-06-01'
+    headers = {'Authorization': 'Bearer <access_token>'}
+    
+    response = requests.get(parameter_adf_URI, headers=headers)
+    data = json.loads(response.text)
+    spark = SparkSession.builder.getOrCreate()
+    df = spark.read.json(spark.sparkContext.parallelize([json.dumps(data)]))
+    
+    df = df.select(
+        col('runId'),
+        col('pipelineName').alias('pipeline_name'),
+        col('parameters'),
+        col('message').alias('error'),
+        col('runStart').alias('start_time'),
+        col('runEnd').alias('end_time'),
+        col('durationInMs'),
+        col('status')
+    )
+    
+    df.createOrReplaceTempView("tempDF")
+    
+    select_cols = [
+        "pipeline_name",
+        "runId",
+        "date_format(start_time, 'yyyy-MM-dd HH:mm:ss') as start_time",
+        "date_format(end_time, 'yyyy-MM-dd HH:mm:ss') as end_time",
+        "error",
+        "status"
+    ]
+    
+    parameter_cols = [
+        f"CASE WHEN parameters.`{col_name.split('.')[-1]}` = '{{}}' THEN '' ELSE concat('{col_name.split('.')[-1]}:', parameters.`{col_name.split('.')[-1]}`) END" 
+        for col_name in df.select('parameters.*').columns
+    ]
+    
+    # Handle the case when the 'parameters' field is an empty JSON object
+    parameter_cols.append("CASE WHEN size(parameters) = 0 THEN '' ELSE '' END")
+    
+    sql_query = (
+        f"SELECT " + ",".join(select_cols) +
+        ", concat_ws('|', " + ",".join(parameter_cols) + ") as parameters," +
+        "CONCAT(CAST(FLOOR(durationInMs / 60000) AS STRING), ' min ', " +
+        "CAST(FLOOR((durationInMs % 60000 / 1000)) AS STRING), ' Sec') as duration, " +
+        "current_date() as requested_date FROM tempDF"
+    )
+    
+    df_combined = spark.sql(sql_query)
+    
+    table_name = "<table_name>"
+    table_exists = spark.catalog.tableExists(table_name)
+    
+    if table_exists:
+        df_combined.createOrReplaceTempView("temp_pipelines")
+        sql_query_upsert = f"""
+            MERGE INTO {table_name} AS target
+            USING temp_pipelines AS source
+            ON target.runId = source.runId
+            WHEN MATCHED THEN UPDATE SET *
+            WHEN NOT MATCHED THEN INSERT *
+        """
+        spark.sql(sql_query_upsert)
+    else:
+        df_combined.write.format("delta").mode("append").saveAsTable(table_name)
 
 
