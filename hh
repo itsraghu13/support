@@ -15,7 +15,7 @@ foreach ($gzFile in $gzFiles) {
     Write-Host "Searching in $($gzFile.Name)"
     
     try {
-        $extractedPath = Join-Path $folderPath (Split-Path $gzFile.Name -LeafBase)
+        $extractedPath = Join-Path $folderPath $gzFile.BaseName
         [System.IO.Compression.ZipFile]::ExtractToDirectory($gzFile.FullName, $extractedPath)
 
         $extractedFiles = Get-ChildItem -Path $extractedPath -File
