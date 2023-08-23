@@ -1,3 +1,6 @@
+'^.*\bT\d{2}:\d{2}:\d{2}\.\d{3}Z\b|\bT\d{2}:\d{2}:\d{2}\.\d{3}\b|\b\d{2}:\d{2}:\d{2}\.\d{3}Z\b.*$'
+
+
 $folderPath = "$PSHOME\en-US"
 $searchPattern = 'T\d{2}:\d{2}:\d{2}\.\d{3}Z'
 
