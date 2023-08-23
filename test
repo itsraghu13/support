@@ -147,3 +147,38 @@ if ($matchingFiles.Count -gt 0) {
 }
 
 
+
+
+
+
+
+
+# Define the folder path and the search pattern
+$folderPath = "C:\path\to\your\folder"
+$searchPattern = "^(T\d{2}:\d{2}:\d{2}\.\d{3}|Z\d{2}:\d{2}:\d{2}\.\d{3})$"
+
+# Get a list of files in the folder
+$files = Get-ChildItem -Path $folderPath -File -Filter "*.gz"
+
+# Initialize an empty array to store matching files
+$matchingFiles = @()
+
+# Loop through each file and check for the search pattern
+foreach ($file in $files) {
+    $fileContent = Get-Content -Path $file.FullName -Raw | Select-String -Pattern $searchPattern
+    if ($fileContent) {
+        $matchingFiles += $file
+        break  # No need to continue checking the current file
+    }
+}
+
+if ($matchingFiles.Count -gt 0) {
+    Write-Host "Files matching the specified format:"
+    foreach ($file in $matchingFiles) {
+        Write-Host $file.FullName
+    }
+} else {
+    Write-Host "No files matching the specified format found."
+}
+
+
