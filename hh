@@ -101,3 +101,9 @@ if ($matchingFiles.Count -gt 0) {
 } else {
     Write-Host "No files containing rows with the specified format found."
 }
+
+
+
+
+Install-Module -Name System.IO.Compression.FileSystem
+
