@@ -1,5 +1,5 @@
 $folderPath = "$PSHOME\en-US"
-$searchPattern = '^(T\d{2}:\d{2}:\d{2}\.\d{3}|.*\d{2}:\d{2}:\d{2}\.\d{3}Z|T\d{2}:\d{2}:\d{2}\.\d{3}Z)$'
+$searchPattern = 'T\d{2}:\d{2}:\d{2}\.\d{3}Z'
 
 $matchingFiles = @()
 
