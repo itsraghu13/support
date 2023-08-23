@@ -1,3 +1,7 @@
+Select-String -Path "$PSHOME\en-US\*.txt" -Pattern '^(T\d{2}:\d{2}:\d{2}\.\d{3}|.*\d{2}:\d{2}:\d{2}\.\d{3}Z|T\d{2}:\d{2}:\d{2}\.\d{3}Z)$'
+
+
+
 # Define the folder path
 $folderPath = "C:\path\to\your\folder"
 
