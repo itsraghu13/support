@@ -13,3 +13,26 @@ if ($files.Count -gt 0) {
 } else {
     Write-Host "No files matching the specified format found."
 }
+
+
+
+
+
+# Define the folder path and the search pattern
+$folderPath = "C:\path\to\your\folder"
+$searchPattern = "^(T\d{2}:\d{2}:\d{2}\.\d{3}|.*\d{2}:\d{2}:\d{2}\.\d{3}Z)$"
+
+# Get a list of files in the folder that match the search pattern
+$files = Get-ChildItem -Path $folderPath -File | Where-Object {
+    $_.Name -match $searchPattern -or
+    (Get-Content $_.FullName) -match $searchPattern
+}
+
+if ($files.Count -gt 0) {
+    Write-Host "Files matching the specified format:"
+    foreach ($file in $files) {
+        Write-Host $file.FullName
+    }
+} else {
+    Write-Host "No files matching the specified format found."
+}
