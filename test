@@ -80,3 +80,32 @@ if ($matchingFiles.Count -gt 0) {
     Write-Host "No files matching the specified format found."
 }
 
+
+
+
+
+
+
+
+def find_files_with_matching_rows(folder_path):
+  """
+  Finds all files in the specified folder that contain rows matching the specified format.
+
+  Args:
+    folder_path: The path to the folder to search.
+
+  Returns:
+    A list of the names of the files that contain rows matching the format.
+  """
+
+  files = []
+  for file in os.listdir(folder_path):
+    if file.endswith(".gz"):
+      with gzip.open(os.path.join(folder_path, file), "r") as f:
+        for line in f:
+          if re.match(r"T\d{2}:\d{2}:\d{2}.\d{3}|Z\d{2}:\d{2}:\d{2}.\d{3}", line):
+            files.append(file)
+
+  return files
+
+
