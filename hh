@@ -149,3 +149,55 @@ if ($matchingFiles.Count -gt 0) {
     Write-Host "No files containing rows with the specified format found."
 }
 
+
+
+
+
+
+
+
+# Define the folder path
+$folderPath = "C:\path\to\your\folder"
+
+# Define the search pattern
+$searchPattern = "T\d{2}:\d{2}:\d{2}\.\d{3}$|.*\d{2}:\d{2}:\d{2}\.\d{3}Z$|T\d{2}:\d{2}:\d{2}\.\d{3}Z$"
+
+# Get a list of .gz files in the folder
+$gzFiles = Get-ChildItem -Path $folderPath -Filter *.gz
+
+# Initialize an array to store matching files
+$matchingFiles = @()
+
+# Loop through each .gz file and check for the search pattern
+foreach ($gzFile in $gzFiles) {
+    Write-Host "Searching in $($gzFile.Name)"
+    
+    try {
+        # Use a chunk size of 1 MB
+        $chunkSize = 1MB
+        
+        # Get the file size
+        $fileSize = $gzFile.Length
+        
+        # Read the file in chunks
+        for ($offset = 0; $offset -lt $fileSize; $offset += $chunkSize) {
+            $chunk = Get-Content -Path $gzFile.FullName -ReadCount $chunkSize -Raw
+            
+            if ($chunk -match $searchPattern) {
+                $matchingFiles += $gzFile
+            }
+        }
+    } catch {
+        Write-Host "Error processing $($gzFile.Name): $_"
+    }
+}
+
+if ($matchingFiles.Count -gt 0) {
+    Write-Host "Files containing rows with the specified format:"
+    foreach ($file in $matchingFiles) {
+        Write-Host $file.FullName
+    }
+} else {
+    Write-Host "No files containing rows with the specified format found."
+}
+
