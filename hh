@@ -14,19 +14,22 @@ $matchingFiles = @()
 foreach ($gzFile in $gzFiles) {
     Write-Host "Searching in $($gzFile.Name)"
     
-    $fileContent = ""
     try {
-        $gzStream = New-Object IO.Compression.GZipStream (New-Object IO.FileStream $gzFile.FullName, [IO.Compression.CompressionMode]::Decompress)
-        $reader = New-Object IO.StreamReader $gzStream
-        $fileContent = $reader.ReadToEnd()
-        $reader.Close()
-        $gzStream.Close()
-    } catch {
-        Write-Host "Error decompressing $($gzFile.Name): $_"
-    }
+        $extractedPath = Join-Path $folderPath (Split-Path $gzFile.Name -LeafBase)
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($gzFile.FullName, $extractedPath)
 
-    if ($fileContent -match $searchPattern) {
-        $matchingFiles += $gzFile
+        $extractedFiles = Get-ChildItem -Path $extractedPath -File
+        foreach ($extractedFile in $extractedFiles) {
+            $fileContent = Get-Content $extractedFile.FullName
+            if ($fileContent -match $searchPattern) {
+                $matchingFiles += $gzFile
+                break
+            }
+        }
+
+        Remove-Item -Path $extractedPath -Recurse -Force
+    } catch {
+        Write-Host "Error processing $($gzFile.Name): $_"
     }
 }
 
