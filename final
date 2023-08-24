@@ -2,23 +2,18 @@ $folderPath = "C:\path\to\your\folder"
 $searchPattern = '".*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*"'
 
 $hashTable = @{}
-$maxParallelism = 10
+$parallel = 10
 
-$job = Start-Job -ScriptBlock {
-    Get-ChildItem -Path $folderPath -Filter *.txt | ForEach-Object {
-        $filePath = $_.FullName
-        Write-Host "Searching in $($filePath)"
+Get-ChildItem -Path $folderPath -Filter *.txt -Parallel $parallel | ForEach-Object {
+    $filePath = $_.FullName
+    Write-Host "Searching in $($filePath)"
 
-        $matchingLines = Get-Content $filePath -ReadCount 1000 -Wait | Select-String -Pattern $searchPattern
-        
-        foreach ($matchingLine in $matchingLines) {
-            $hashTable[$matchingLine.Line] = $filePath
-        }
+    $matchingLines = Get-Content $filePath -ReadCount 1000 -Wait | Select-String -Pattern $searchPattern
+    
+    foreach ($matchingLine in $matchingLines) {
+        $hashTable[$matchingLine.Line] = $filePath
     }
 }
-
-$job.MaxParallelism = $maxParallelism
-$job.WaitUntilCompleted()
 
 $matchingFiles = $hashTable.Keys | Sort-Object
 
@@ -30,6 +25,7 @@ if ($matchingFiles.Count -gt 0) {
 } else {
     Write-Host "No files containing matching lines found."
 }
+
 
 
 
