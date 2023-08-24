@@ -1,6 +1,93 @@
 import os
 import re
 import multiprocessing
+from functools import partial
+
+folder_path = r"C:\path\to\your\folder"
+search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
+sample_size = 10
+
+def search_chunk(chunk_lines):
+    matching_lines = []
+    for line in chunk_lines:
+        if re.match(search_pattern, line):
+            matching_lines.append(line.strip())
+    return matching_lines
+
+def main():
+    matching_files = []
+
+    # Get the number of cores
+    num_cores = multiprocessing.cpu_count()
+
+    # Create a multiprocessing pool
+    with multiprocessing.Pool(num_cores) as pool:
+        # Iterate over the files
+        for file_name in os.listdir(folder_path):
+            if file_name.endswith(".txt"):
+                file_path = os.path.join(folder_path, file_name)
+                print(f"Processing {file_path}")
+
+                matching_lines = []
+
+                # Process the file in chunks
+                with open(file_path, "r") as file:
+                    while True:
+                        chunk_lines = [next(file) for _ in range(sample_size)]
+                        if not chunk_lines:
+                            break
+
+                        # Use the pool to search the chunk
+                        search_func = partial(search_chunk, chunk_lines)
+                        chunk_matching_lines = pool.apply(search_func)
+
+                        matching_lines.extend(chunk_matching_lines)
+
+                if matching_lines:
+                    print(f"Matching line(s) found in {file_path} (sample):")
+                    for line in matching_lines:
+                        print(line)
+                    matching_files.append(file_path)
+
+    if matching_files:
+        print("Files containing matching lines:")
+        for file_path in matching_files:
+            print(file_path)
+    else:
+        print("No files containing matching lines found.")
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import os
+import re
+import multiprocessing
 
 folder_path = r"C:\path\to\your\folder"
 search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
