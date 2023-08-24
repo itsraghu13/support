@@ -1,6 +1,95 @@
 import os
 import re
 import multiprocessing
+
+folder_path = r"C:\path\to\your\folder"
+search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
+sample_size = 5  # Number of rows to search
+
+def search_lines(lines):
+    matching_lines = []
+    for line in lines:
+        if re.match(search_pattern, line):
+            matching_lines.append(line.strip())
+    return matching_lines
+
+def process_file(file_path):
+    matching_lines = []
+
+    with open(file_path, "r") as file:
+        lines = [next(file, None) for _ in range(sample_size)]
+        lines = [line for line in lines if line is not None]
+
+    if lines:
+        matching_lines = search_lines(lines)
+
+    return matching_lines, file_path
+
+def main():
+    matching_files = []
+
+    # Get the number of cores
+    num_cores = multiprocessing.cpu_count()
+
+    # Create a multiprocessing pool
+    with multiprocessing.Pool(num_cores) as pool:
+        # Iterate over the files
+        for file_name in os.listdir(folder_path):
+            if file_name.endswith(".txt"):
+                file_path = os.path.join(folder_path, file_name)
+                print(f"Processing {file_path}")
+
+                # Use the pool to search the file
+                matching_lines, file_path = pool.apply(process_file, [file_path])
+
+                if matching_lines:
+                    print(f"Matching line(s) found in {file_path} (sample):")
+                    for line in matching_lines:
+                        print(line)
+                    matching_files.append(file_path)
+
+    if matching_files:
+        print("Files containing matching lines:")
+        for file_path in matching_files:
+            print(file_path)
+    else:
+        print("No files containing matching lines found.")
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import os
+import re
+import multiprocessing
 from functools import partial
 
 folder_path = r"C:\path\to\your\folder"
