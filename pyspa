@@ -33,10 +33,12 @@ def main():
                 # Process the file in chunks
                 with open(file_path, "r") as file:
                     while True:
-                        chunk_lines = [next(file) for _ in range(sample_size)]
-                        if not chunk_lines:
+                        chunk_lines = [next(file, None) for _ in range(sample_size)]
+                        if not any(chunk_lines):  # Check if all lines are None
                             break
 
+                        chunk_lines = [line for line in chunk_lines if line is not None]
+                        
                         # Use the pool to search the chunk
                         search_func = partial(search_chunk, chunk_lines)
                         chunk_matching_lines = pool.apply(search_func)
