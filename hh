@@ -1,59 +1,37 @@
-import os
-import re
-import random
 import gzip
-import multiprocessing
+import re
+import glob
 
-folder_path = r"C:\path\to\your\folder"
-search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
-sample_size = 100
+def search_gz_files(search_string, file_list):
+  """
+  Searches a list of gzipped files for the given search string.
 
-def find_matching_rows(text, pattern):
-    matches = re.finditer(pattern, text)
+  Args:
+    search_string: The search string to look for.
+    file_list: A list of gzipped file paths.
 
-    matching_rows = []
-    for match in matches:
-        start = match.start()
-        end = match.end()
+  Returns:
+    A list of file paths that contain the search string.
+  """
 
-        matching_rows.append(text[start:end])
+  results = []
+  for file_path in file_list:
+    with gzip.open(file_path, 'rb') as f:
+      for line in f:
+        if re.search(search_string, line):
+          results.append(file_path)
 
-    return matching_rows
+  return results
 
 
-def process_file(file_path):
-    print(f"Processing {file_path}")
+if __name__ == '__main__':
+  search_string = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
+  file_list = glob.glob('*.gz')
+  results = search_gz_files(search_string, file_list)
 
-    with gzip.open(file_path, "r") as file:
-        sampled_lines = random.sample(file.readlines(), sample_size)
-        matching_rows = find_matching_rows("".join(sampled_lines), pattern)
+  for file_path in results:
+    print(file_path)
 
-        if matching_rows:
-            print(f"Matching lines found in {file_path}:")
-            for line in matching_rows:
-                print(line)
-
-    return True
-
-def main():
-    matching_files = []
-
-    with multiprocessing.Pool(processes=4) as pool:
-        results = pool.map(process_file, os.listdir(folder_path))
-
-    for result in results:
-        if result:
-            matching_files.append(result)
-
-    if matching_files:
-        print("Files containing matching lines:")
-        for file_path in matching_files:
-            print(file_path)
-    else:
-        print("No files containing matching lines found.")
-
-if __name__ == "__main__":
-    main()
 
 
 
