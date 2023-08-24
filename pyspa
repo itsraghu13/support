@@ -1,57 +1,48 @@
 import os
 import re
-import tempfile
-import gzip
-import shutil
+import multiprocessing
 
 folder_path = r"C:\path\to\your\folder"
 search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
-sample_size = 10
 
-matching_files = []
+def search_file(file_path):
+    matching_lines = []
 
-for file_name in os.listdir(folder_path):
-    if file_name.endswith(".gz"):
-        file_path = os.path.join(folder_path, file_name)
-        print(f"Processing {file_path}")
+    with open(file_path, "r") as file:
+        for line in file:
+            if re.match(search_pattern, line):
+                matching_lines.append(line.strip())
+    
+    return matching_lines
 
-        # Create a temporary directory to process the file
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Attempt to copy the contents of the .gz file to a temporary file
-            try:
-                temp_file_path = os.path.join(temp_dir, file_name[:-3])  # Remove .gz extension
-                with open(temp_file_path, 'wb') as temp_file:
-                    with gzip.open(file_path, 'rb') as gz_file:
-                        shutil.copyfileobj(gz_file, temp_file)
-            except OSError as e:
-                # If the file is not in the gzip format, we will get an OSError
-                # with the error message `Not a gzip file`
-                if e.strerror == 'Not a gzip file':
-                    print(f"Skipping {file_path} (not a gzip file)")
-                    continue
-                else:
-                    raise e
+def main():
+    matching_files = []
+    
+    # Get the number of cores
+    num_cores = multiprocessing.cpu_count()
 
-            # Read sample lines from the temp file and search for the pattern
-            matching_lines = []
-            with open(temp_file_path, "r") as temp_file:
-                sample_lines = [next(temp_file) for _ in range(sample_size)]
-                for line in sample_lines:
-                    if re.match(search_pattern, line):
-                        matching_lines.append(line.strip())
-            
-            if matching_lines:
-                print(f"Matching line(s) found in {file_path} (sample):")
-                for line in matching_lines:
-                    print(line)
-                matching_files.append(file_path)
+    # Create a multiprocessing pool
+    with multiprocessing.Pool(num_cores) as pool:
+        # Iterate over the files and search them in parallel
+        for file_name in os.listdir(folder_path):
+            if file_name.endswith(".txt"):
+                file_path = os.path.join(folder_path, file_name)
 
-if matching_files:
-    print("Files containing matching lines:")
-    for file_path in matching_files:
-        print(file_path)
-else:
-    print("No files containing matching lines found.")
+                # Use the pool to search the file
+                matching_lines = pool.apply(search_file, [file_path])
+
+                matching_files.append(matching_lines)
+
+    if matching_files:
+        print("Files containing matching lines:")
+        for file_path in matching_files:
+            print(file_path)
+    else:
+        print("No files containing matching lines found.")
+
+if __name__ == "__main__":
+    main()
+
 
 
 
