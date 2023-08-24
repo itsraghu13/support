@@ -1,3 +1,43 @@
+$folderPath = "$PSHOME\en-US\TimeLogs"
+$searchPattern = '"(?<time>(?:YYYY-MM-DDT|YYYY-MM-DD )\d{2}:\d{2}:\d{2}\.\d{3}(Z|))"'
+
+$matchingFiles = @()
+
+Get-ChildItem -Path $folderPath -Filter *.txt | ForEach-Object {
+    $filePath = $_.FullName
+    Write-Host "Searching in $($filePath)"
+
+    $fileContent = Get-Content $filePath
+    $matchingLines = $fileContent | Where-Object { $_ -match $searchPattern }
+    
+    if ($matchingLines.Count -gt 0) {
+        Write-Host "Matching line(s) found in $($filePath):"
+        $matchingLines | ForEach-Object {
+            Write-Host $_
+        }
+        $matchingFiles += $_
+    }
+}
+
+if ($matchingFiles.Count -gt 0) {
+    Write-Host "Files containing matching lines:"
+    $matchingFiles | ForEach-Object {
+        Write-Host $_.FullName
+    }
+} else {
+    Write-Host "No files containing matching lines found."
+}
+
+
+
+
+
+
+
+
+
+
+
 
 $folderPath = "$PSHOME\en-US\TimeLogs"
 $searchPattern = '(?<time>(?:YYYY-MM-DDT|YYYY-MM-DD )\d{2}:\d{2}:\d{2}\.\d{3}(Z|))'
