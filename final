@@ -9,6 +9,32 @@ $files = Get-ChildItem -Path $folderPath -Filter *.txt | Where-Object {
 if ($files.Count -gt 0) {
     Write-Host "Files containing matching lines:"
     $files | ForEach-Object {
+        Write-Host "File: $_.FullName, Total records: $($text -match $searchPattern -c)"
+    }
+} else {
+    Write-Host "No files containing matching lines found."
+}
+
+
+
+
+
+
+
+
+
+
+$folderPath = "C:\path\to\your\folder"
+$searchPattern = '".*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*"'
+
+$files = Get-ChildItem -Path $folderPath -Filter *.txt | Where-Object {
+    $text = Get-Content $_.FullName
+    $text -match $searchPattern
+}
+
+if ($files.Count -gt 0) {
+    Write-Host "Files containing matching lines:"
+    $files | ForEach-Object {
         Write-Host $_.FullName
     }
 } else {
