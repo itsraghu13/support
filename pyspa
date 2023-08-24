@@ -30,3 +30,60 @@ if matching_files:
         print(file_path)
 else:
     print("No files containing matching lines found.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import os
+import re
+import gzip
+import tempfile
+
+folder_path = r"C:\path\to\your\folder"
+search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
+sample_size = 10
+
+matching_files = []
+
+for file_name in os.listdir(folder_path):
+    if file_name.endswith(".gz"):
+        file_path = os.path.join(folder_path, file_name)
+        print(f"Processing {file_path}")
+
+        temp_file = tempfile.NamedTemporaryFile(delete=False)
+        
+        try:
+            with gzip.open(file_path, "rt") as gz_file:
+                sample_lines = [next(gz_file) for _ in range(sample_size)]
+                temp_file.writelines(sample_lines)
+                temp_file.close()
+
+            with open(temp_file.name, "r") as temp_sample:
+                matching_lines = [line.strip() for line in temp_sample if re.match(search_pattern, line)]
+            
+            if matching_lines:
+                print(f"Matching line(s) found in {file_path}:")
+                for line in matching_lines:
+                    print(line)
+                matching_files.append(file_path)
+
+        finally:
+            os.unlink(temp_file.name)
+
+if matching_files:
+    print("Files containing matching lines:")
+    for file_path in matching_files:
+        print(file_path)
+else:
+    print("No files containing matching lines found.")
+
