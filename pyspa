@@ -1,5 +1,71 @@
 import os
 import re
+import tempfile
+import gzip
+
+folder_path = r"C:\path\to\your\folder"
+search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
+sample_size = 10
+
+matching_files = []
+
+for file_name in os.listdir(folder_path):
+    if file_name.endswith(".gz"):
+        file_path = os.path.join(folder_path, file_name)
+        print(f"Processing {file_path}")
+
+        # Create a temporary directory to extract and process the file
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Attempt to extract the .gz file to the temporary directory
+            try:
+                temp_file_path = os.path.join(temp_dir, file_name[:-3])  # Remove .gz extension
+                with gzip.open(file_path, 'rb') as gz_file:
+                    with open(temp_file_path, 'wb') as temp_file:
+                        temp_file.write(gz_file.read())
+            except OSError as e:
+                print(f"Error extracting {file_path}: {e}")
+                continue  # Skip this file and continue to the next one
+
+            # Read sample lines from the temp file and search for the pattern
+            matching_lines = []
+            with open(temp_file_path, "r") as temp_file:
+                sample_lines = [next(temp_file) for _ in range(sample_size)]
+                for line in sample_lines:
+                    if re.match(search_pattern, line):
+                        matching_lines.append(line.strip())
+            
+            if matching_lines:
+                print(f"Matching line(s) found in {file_path} (sample):")
+                for line in matching_lines:
+                    print(line)
+                matching_files.append(file_path)
+
+if matching_files:
+    print("Files containing matching lines:")
+    for file_path in matching_files:
+        print(file_path)
+else:
+    print("No files containing matching lines found.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import os
+import re
 
 folder_path = r"C:\path\to\your\folder"
 search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
