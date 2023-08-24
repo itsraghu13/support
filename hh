@@ -1,3 +1,44 @@
+$folderPath = "$PSHOME\en-US\TimeLogs"
+$searchPattern = '.*\b(T\d{2}:\d{2}:\d{2}\.\d{3}Z|(?<time>T\d{2}:\d{2}:\d{2}\.\d{3})|.*\d{2}:\d{2}:\d{2}\.\d{3}Z)\b.*'
+
+$matchingFiles = @()
+
+Get-ChildItem -Path $folderPath -Filter *.txt | ForEach-Object {
+    $filePath = $_.FullName
+    Write-Host "Searching in $($filePath)"
+
+    $fileContent = Get-Content $filePath
+    $matchingLines = $fileContent | Where-Object { $_ -match $searchPattern -and $_ -notmatch "Time Zone" }
+    
+    if ($matchingLines.Count -gt 0) {
+        Write-Host "Matching line(s) found in $($filePath):"
+        $matchingLines | ForEach-Object {
+            Write-Host $_
+        }
+        $matchingFiles += $_
+    }
+}
+
+if ($matchingFiles.Count -gt 0) {
+    Write-Host "Files containing matching lines:"
+    $matchingFiles | ForEach-Object {
+        Write-Host $_.FullName
+    }
+} else {
+    Write-Host "No files containing matching lines found."
+}
+
+
+
+
+
+
+
+
+
+
+
+
 '.*\b(T\d{2}:\d{2}:\d{2}\.\d{3}\Z|\\T\d{2}:\d{2}:\d{2}\.\d{3}|\\.*\d{2}:\d{2}:\d{2}\.\d{3}\Z)\b.*'
 
 
