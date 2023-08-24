@@ -1,15 +1,17 @@
 $folderPath = "C:\path\to\your\folder"
 $searchPattern = '".*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*"'
+$sampleSize = 100
 
 $files = Get-ChildItem -Path $folderPath -Filter *.txt | Where-Object {
-    $text = Get-Content $_.FullName
-    $text -match $searchPattern
+    $sampledLines = Get-Content $_.FullName | Get-Random -Count $sampleSize
+    $matchFound = $sampledLines -match $searchPattern
+    $matchFound.Count -gt 0
 }
 
 if ($files.Count -gt 0) {
     Write-Host "Files containing matching lines:"
     $files | ForEach-Object {
-        Write-Host "File: $_.FullName, Total records: $($text -match $searchPattern -c)"
+        Write-Host $_.FullName
     }
 } else {
     Write-Host "No files containing matching lines found."
