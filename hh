@@ -1,3 +1,82 @@
+import os
+import re
+import random
+import gzip
+
+folder_path = r"C:\path\to\your\folder"
+search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
+sample_size = 100
+
+def find_matching_rows(text, pattern):
+    matches = re.finditer(pattern, text)
+
+    matching_rows = []
+    for match in matches:
+        start = match.start()
+        end = match.end()
+
+        matching_rows.append(text[start:end])
+
+    return matching_rows
+
+
+def process_file(file_path):
+    print(f"Processing {file_path}")
+
+    with gzip.open(file_path, "r") as file:
+        sampled_lines = random.sample(file.readlines(), sample_size)
+        matching_rows = find_matching_rows("".join(sampled_lines), pattern)
+
+        if matching_rows:
+            print(f"Matching lines found in {file_path}:")
+            for line in matching_rows:
+                print(line)
+
+    return True
+
+def main():
+    matching_files = []
+
+    with multiprocessing.Pool() as pool:
+        results = pool.map(process_file, os.listdir(folder_path))
+
+    for result in results:
+        if result:
+            matching_files.append(result)
+
+    if matching_files:
+        print("Files containing matching lines:")
+        for file_path in matching_files:
+            print(file_path)
+    else:
+        print("No files containing matching lines found.")
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 '".*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*"'
 
 $folderPath = "$PSHOME\en-US\TimeLogs"
