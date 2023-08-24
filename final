@@ -1,5 +1,69 @@
 $folderPath = "C:\path\to\your\folder"
 $searchPattern = '".*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*"'
+$sampleSize = 2
+
+$matchingFiles = @()
+
+$files = Get-ChildItem -Path $folderPath -Filter *.txt
+
+$files | ForEach-Object {
+    $filePath = $_.FullName
+    Write-Host "Processing $($filePath)"
+
+    $sampledLines = @()
+    $reader = [System.IO.File]::OpenText($filePath)
+
+    while (!$reader.EndOfStream -and $sampledLines.Count -lt $sampleSize) {
+        $line = $reader.ReadLine()
+        if ($line -match $searchPattern) {
+            $sampledLines += $line
+        }
+    }
+
+    $reader.Close()
+
+    if ($sampledLines.Count -gt 0) {
+        Write-Host "Matching line(s) found in $($filePath):"
+        $sampledLines | ForEach-Object {
+            Write-Host $_
+        }
+        $matchingFiles += $_
+    }
+}
+
+if ($matchingFiles.Count -gt 0) {
+    Write-Host "Files containing matching lines:"
+    $matchingFiles | ForEach-Object {
+        Write-Host $_.FullName
+    }
+} else {
+    Write-Host "No files containing matching lines found."
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+$folderPath = "C:\path\to\your\folder"
+$searchPattern = '".*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*"'
 $sampleSize = 100
 
 $files = Get-ChildItem -Path $folderPath -Filter *.txt | Where-Object {
