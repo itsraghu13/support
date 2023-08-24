@@ -1,6 +1,55 @@
 $folderPath = "C:\path\to\your\folder"
 $searchPattern = '".*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*"'
 
+$hashTable = @{}
+
+$throttleLimit = 10
+
+Get-ChildItem -Path $folderPath -Filter *.txt -ThrottleLimit $throttleLimit | ForEach-Object {
+    $filePath = $_.FullName
+    Write-Host "Searching in $($filePath)"
+
+    $matchingLines = Get-Content $filePath -ReadCount 1000 | Select-String -Pattern $searchPattern -MaxParallelism 10
+    
+    foreach ($matchingLine in $matchingLines) {
+        $hashTable[$matchingLine.Line] = $filePath
+    }
+}
+
+$matchingFiles = $hashTable.Keys | Sort-Object
+
+if ($matchingFiles.Count -gt 0) {
+    Write-Host "Files containing matching lines:"
+    $matchingFiles | ForEach-Object {
+        Write-Host $_
+    }
+} else {
+    Write-Host "No files containing matching lines found."
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+$folderPath = "C:\path\to\your\folder"
+$searchPattern = '".*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*"'
+
 $matchingFiles = @()
 
 Get-ChildItem -Path $folderPath -Filter *.txt | ForEach-Object {
