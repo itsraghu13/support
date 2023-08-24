@@ -1,3 +1,6 @@
+'(?<time>(?:YYYY-MM-DDT|YYYY-MM-DD )\d{2}:\d{2}:\d{2}\.\d{3}(Z|))'
+
+
 '(T\d{2}:\d{2}:\d{2}\.\d{3}(?!Z)|.*\d{2}:\d{2}:\d{2}\.\d{3}|T\d{2}:\d{2}:\d{2}\.\d{3})'
 $folderPath = "$PSHOME\en-US\TimeLogs"
 $searchPattern = '.*\b(T\d{2}:\d{2}:\d{2}\.\d{3}Z|(?<time>T\d{2}:\d{2}:\d{2}\.\d{3})|.*\d{2}:\d{2}:\d{2}\.\d{3}Z)\b.*'
