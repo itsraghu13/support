@@ -2,6 +2,7 @@ import os
 import re
 import random
 import gzip
+import multiprocessing
 
 folder_path = r"C:\path\to\your\folder"
 search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
@@ -37,7 +38,7 @@ def process_file(file_path):
 def main():
     matching_files = []
 
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool(processes=4) as pool:
         results = pool.map(process_file, os.listdir(folder_path))
 
     for result in results:
@@ -53,6 +54,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
