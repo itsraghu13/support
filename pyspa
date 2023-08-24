@@ -1,0 +1,28 @@
+from pyspark.sql import SparkSession
+import re
+
+# Initialize Spark session
+spark = SparkSession.builder.appName("SearchPattern").getOrCreate()
+
+# Define the folder path and search pattern
+folder_path = "file:///C:/path/to/your/files"  # Use file:// scheme for local path
+search_pattern = r'T\d{2}:\d{2}:\d{2}\.\d{3}Z|T\d{2}:\d{2}:\d{2}\.\d{3}|.*\d{2}:\d{2}:\d{2}\.\d{3}Z'
+
+# Read all text files from the specified folder
+text_files = spark.read.text(f"{folder_path}/*.txt")
+
+# Define a user-defined function to check if a line matches the pattern
+def matches_pattern(line):
+    return re.match(search_pattern, line) is not None
+
+# Register the UDF with Spark
+spark.udf.register("matches_pattern_udf", matches_pattern)
+
+# Filter the lines that match the pattern
+matching_lines = text_files.filterExpr("matches_pattern_udf(value)").select("value")
+
+# Show the matching lines
+matching_lines.show(truncate=False)
+
+# Stop the Spark session
+spark.stop()
