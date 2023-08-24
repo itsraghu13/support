@@ -4,16 +4,21 @@ $searchPattern = '".*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d
 $hashTable = @{}
 $maxParallelism = 10
 
-Get-ChildItem -Path $folderPath -Filter *.txt -MaxParallelism $maxParallelism | ForEach-Object {
-    $filePath = $_.FullName
-    Write-Host "Searching in $($filePath)"
+$job = Start-Job -ScriptBlock {
+    Get-ChildItem -Path $folderPath -Filter *.txt | ForEach-Object {
+        $filePath = $_.FullName
+        Write-Host "Searching in $($filePath)"
 
-    $matchingLines = Get-Content $filePath -ReadCount 1000 -Wait | Select-String -Pattern $searchPattern
-    
-    foreach ($matchingLine in $matchingLines) {
-        $hashTable[$matchingLine.Line] = $filePath
+        $matchingLines = Get-Content $filePath -ReadCount 1000 -Wait | Select-String -Pattern $searchPattern
+        
+        foreach ($matchingLine in $matchingLines) {
+            $hashTable[$matchingLine.Line] = $filePath
+        }
     }
 }
+
+$job.MaxParallelism = $maxParallelism
+$job.WaitUntilCompleted()
 
 $matchingFiles = $hashTable.Keys | Sort-Object
 
