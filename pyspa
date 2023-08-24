@@ -20,12 +20,17 @@ for file_name in os.listdir(folder_path):
             # Attempt to copy the contents of the .gz file to a temporary file
             try:
                 temp_file_path = os.path.join(temp_dir, file_name[:-3])  # Remove .gz extension
-                with gzip.open(file_path, 'rb') as gz_file:
-                    with open(temp_file_path, 'wb') as temp_file:
+                with open(temp_file_path, 'wb') as temp_file:
+                    with gzip.open(file_path, 'rb') as gz_file:
                         shutil.copyfileobj(gz_file, temp_file)
-            except Exception as e:
-                print(f"Error processing {file_path}: {e}")
-                continue  # Skip this file and continue to the next one
+            except OSError as e:
+                # If the file is not in the gzip format, we will get an OSError
+                # with the error message `Not a gzip file`
+                if e.strerror == 'Not a gzip file':
+                    print(f"Skipping {file_path} (not a gzip file)")
+                    continue
+                else:
+                    raise e
 
             # Read sample lines from the temp file and search for the pattern
             matching_lines = []
@@ -47,6 +52,7 @@ if matching_files:
         print(file_path)
 else:
     print("No files containing matching lines found.")
+
 
 
 
