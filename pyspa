@@ -1,28 +1,32 @@
-from pyspark.sql import SparkSession
+import os
 import re
 
-# Initialize Spark session
-spark = SparkSession.builder.appName("SearchPattern").getOrCreate()
+folder_path = r"C:\path\to\your\folder"
+search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
 
-# Define the folder path and search pattern
-folder_path = "file:///C:/path/to/your/files"  # Use file:// scheme for local path
-search_pattern = r'T\d{2}:\d{2}:\d{2}\.\d{3}Z|T\d{2}:\d{2}:\d{2}\.\d{3}|.*\d{2}:\d{2}:\d{2}\.\d{3}Z'
+matching_files = []
 
-# Read all text files from the specified folder
-text_files = spark.read.text(f"{folder_path}/*.txt")
+for file_name in os.listdir(folder_path):
+    if file_name.endswith(".txt"):
+        file_path = os.path.join(folder_path, file_name)
+        print(f"Searching in {file_path}")
 
-# Define a user-defined function to check if a line matches the pattern
-def matches_pattern(line):
-    return re.match(search_pattern, line) is not None
+        matching_lines = []
 
-# Register the UDF with Spark
-spark.udf.register("matches_pattern_udf", matches_pattern)
+        with open(file_path, "r") as file:
+            for line in file:
+                if re.match(search_pattern, line):
+                    matching_lines.append(line.strip())
+        
+        if matching_lines:
+            print(f"Matching line(s) found in {file_path}:")
+            for line in matching_lines:
+                print(line)
+            matching_files.append(file_path)
 
-# Filter the lines that match the pattern
-matching_lines = text_files.filterExpr("matches_pattern_udf(value)").select("value")
-
-# Show the matching lines
-matching_lines.show(truncate=False)
-
-# Stop the Spark session
-spark.stop()
+if matching_files:
+    print("Files containing matching lines:")
+    for file_path in matching_files:
+        print(file_path)
+else:
+    print("No files containing matching lines found.")
