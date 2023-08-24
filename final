@@ -1,15 +1,18 @@
 $folderPath = "C:\path\to\your\folder"
 $searchPattern = '".*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*"'
 
-$files = Get-ChildItem -Path $folderPath -Filter *.txt | Where-Object {$_.Name -match $searchPattern}
+$files = Get-ChildItem -Path $folderPath -Filter *.txt | Where-Object {
+    $text = Get-Content $_.FullName
+    $text -match $searchPattern
+}
 
 if ($files.Count -gt 0) {
-    Write-Host "Files matching pattern $searchPattern:"
+    Write-Host "Files containing matching lines:"
     $files | ForEach-Object {
-        Write-Host $_.Name
+        Write-Host $_.FullName
     }
 } else {
-    Write-Host "No files matching pattern $searchPattern found."
+    Write-Host "No files containing matching lines found."
 }
 
 
