@@ -2,6 +2,7 @@ import os
 import re
 import tempfile
 import gzip
+import shutil
 
 folder_path = r"C:\path\to\your\folder"
 search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
@@ -14,16 +15,16 @@ for file_name in os.listdir(folder_path):
         file_path = os.path.join(folder_path, file_name)
         print(f"Processing {file_path}")
 
-        # Create a temporary directory to extract and process the file
+        # Create a temporary directory to process the file
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Attempt to extract the .gz file to the temporary directory
+            # Attempt to copy the contents of the .gz file to a temporary file
             try:
                 temp_file_path = os.path.join(temp_dir, file_name[:-3])  # Remove .gz extension
                 with gzip.open(file_path, 'rb') as gz_file:
                     with open(temp_file_path, 'wb') as temp_file:
-                        temp_file.write(gz_file.read())
-            except OSError as e:
-                print(f"Error extracting {file_path}: {e}")
+                        shutil.copyfileobj(gz_file, temp_file)
+            except Exception as e:
+                print(f"Error processing {file_path}: {e}")
                 continue  # Skip this file and continue to the next one
 
             # Read sample lines from the temp file and search for the pattern
