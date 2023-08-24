@@ -1,0 +1,29 @@
+$folderPath = "C:\path\to\your\folder"
+$searchPattern = '".*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*"'
+
+$matchingFiles = @()
+
+Get-ChildItem -Path $folderPath -Filter *.txt | ForEach-Object {
+    $filePath = $_.FullName
+    Write-Host "Searching in $($filePath)"
+
+    $reader = [System.IO.File]::OpenText($filePath)
+    while (($line = $reader.ReadLine()) -ne $null) {
+        if ($line -match $searchPattern) {
+            Write-Host "Matching line found in $($filePath):"
+            Write-Host $line
+            $matchingFiles += $_
+            break
+        }
+    }
+    $reader.Close()
+}
+
+if ($matchingFiles.Count -gt 0) {
+    Write-Host "Files containing matching lines:"
+    $matchingFiles | ForEach-Object {
+        Write-Host $_.FullName
+    }
+} else {
+    Write-Host "No files containing matching lines found."
+}
