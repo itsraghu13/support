@@ -1,6 +1,72 @@
 import os
 import re
 import random
+import multiprocessing
+
+folder_path = r"C:\path\to\your\folder"
+search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
+sample_size = 2
+
+def process_file(file_path):
+    print(f"Processing {file_path}")
+
+    with open(file_path, "r") as file:
+        sampled_lines = random.sample(file.readlines(), sample_size)
+        for line in sampled_lines:
+            if re.match(search_pattern, line):
+                print(f"Matching line found in {file_path}:")
+                print(line.strip())
+                return True
+
+    return False
+
+def main():
+    matching_files = []
+
+    with multiprocessing.Pool() as pool:
+        results = pool.map(process_file, os.listdir(folder_path))
+
+    for result in results:
+        if result:
+            matching_files.append(result)
+
+    if matching_files:
+        print("Files containing matching lines:")
+        for file_path in matching_files:
+            print(file_path)
+    else:
+        print("No files containing matching lines found.")
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import os
+import re
+import random
 
 folder_path = r"C:\path\to\your\folder"
 search_pattern = r'.*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*'
