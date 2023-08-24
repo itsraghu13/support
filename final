@@ -1,28 +1,15 @@
 $folderPath = "C:\path\to\your\folder"
 $searchPattern = '".*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z).*"'
 
-$hashTable = @{}
+$files = Get-ChildItem -Path $folderPath -Filter *.txt | Where-Object {$_.Name -match $searchPattern}
 
-Get-ChildItem -Path $folderPath -Filter *.txt -Wait | ForEach-Object {
-    $filePath = $_.FullName
-    Write-Host "Searching in $($filePath)"
-
-    $matchingLines = Get-Content $filePath -ReadCount 1000 -Wait | Select-String -Pattern $searchPattern
-    
-    foreach ($matchingLine in $matchingLines) {
-        $hashTable[$matchingLine.Line] = $filePath
-    }
-}
-
-$matchingFiles = $hashTable.Keys | Sort-Object
-
-if ($matchingFiles.Count -gt 0) {
-    Write-Host "Files containing matching lines:"
-    $matchingFiles | ForEach-Object {
-        Write-Host $_
+if ($files.Count -gt 0) {
+    Write-Host "Files matching pattern $searchPattern:"
+    $files | ForEach-Object {
+        Write-Host $_.Name
     }
 } else {
-    Write-Host "No files containing matching lines found."
+    Write-Host "No files matching pattern $searchPattern found."
 }
 
 
