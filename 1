@@ -1,3 +1,29 @@
+import pyspark.sql.functions as F
+
+def remove_diacritics_udf(input_str):
+    return F.udf(lambda x: unidecode(x))(input_str)
+
+schema = StructType([StructField('text', StringType(), True)])
+
+spark_df = spark.createDataFrame(data=[['Joaé Ëxample Æpple ñicely Þorn']], schema=schema)
+
+spark_df = spark_df.withColumn('text_no_diacritics', remove_diacritics_udf(spark_df['text']))
+
+print(spark_df.show())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 schema = StructType([StructField('text', StringType(), True)])
 
 spark_df = spark.createDataFrame(data=[['Joaé Ëxample Æpple ñicely Þorn']], schema=schema)
