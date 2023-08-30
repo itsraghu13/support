@@ -1,3 +1,25 @@
+from unidecode import unidecode
+
+def remove_diacritics_and_replace(input_str):
+    return unidecode(input_str)
+
+input_string = "Joaé Ëx Âpple ñice Þorn"
+modified_string = remove_diacritics_and_replace(input_string)
+print(modified_string)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import pyspark.sql.functions as F
 
 def remove_diacritics_udf(input_str):
