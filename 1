@@ -38,3 +38,53 @@ def remove_diacritics_and_replace(input_str):
 input_string = "Joaé Ëxample Âpple ñicely Þorn"
 modified_string = remove_diacritics_and_replace(input_string)
 print(modified_string)
+
+
+
+
+
+
+
+
+
+
+
+
+import unicodedata
+
+def remove_diacritics_and_replace(input_str):
+    normalized_str = unicodedata.normalize('NFD', input_str)
+    output_str = ''
+    
+    replacement_dict = {
+        'À': 'A', 'Á': 'A', 'Â': 'A', 'Ã': 'A', 'Ä': 'A', 'Å': 'A',
+        'à': 'a', 'á': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a', 'å': 'a',
+        'È': 'E', 'É': 'E', 'Ê': 'E', 'Ë': 'E',
+        'è': 'e', 'é': 'e', 'ê': 'e', 'ë': 'e',
+        'Ì': 'I', 'Í': 'I', 'Î': 'I', 'Ï': 'I',
+        'ì': 'i', 'í': 'i', 'î': 'i', 'ï': 'i',
+        'Ò': 'O', 'Ó': 'O', 'Ô': 'O', 'Õ': 'O', 'Ö': 'O', 'Ø': 'O',
+        'ò': 'o', 'ó': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o', 'ø': 'o',
+        'Ù': 'U', 'Ú': 'U', 'Û': 'U', 'Ü': 'U',
+        'ù': 'u', 'ú': 'u', 'û': 'u', 'ü': 'u',
+        'Ý': 'Y', 'ý': 'y', 'ÿ': 'y',
+        'Ç': 'C', 'ç': 'c',
+        'Ñ': 'N', 'ñ': 'n',
+        'Æ': 'AE', 'æ': 'ae',
+        'Þ': 'Th', 'þ': 'th', 'Ð': 'D', 'ð': 'd',  # Icelandic characters
+        'ß': 'ss',
+        'œ': 'oe', 'Œ': 'OE',
+        'Ā': 'A', 'ā': 'a', 'Ă': 'A', 'ă': 'a', 'Ą': 'A', 'ą': 'a',  # Latin extended-A
+        'Ć': 'C', 'ć': 'c', 'Ĉ': 'C', 'ĉ': 'c', 'Ċ': 'C', 'ċ': 'c',
+        # ... add more mappings as needed
+    }
+    
+    for c in normalized_str:
+        output_str += replacement_dict.get(c, c)  # Use replacement if available, else keep the original
+    
+    return output_str
+
+input_string = "Joaé Ëxample Âpple ñicely Þorn"
+modified_string = remove_diacritics_and_replace(input_string)
+print(modified_string)
+
