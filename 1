@@ -1,3 +1,23 @@
+from unidecode import unidecode
+
+def remove_diacritics_and_replace(input_str):
+    return unidecode(input_str)
+
+input_string = "Joaé Ëxample Âpple ñicely Þorn"
+modified_string = remove_diacritics_and_replace(input_string)
+print(modified_string)
+
+
+
+
+
+
+
+
+
+
+
+
 import unicodedata
 
 def remove_diacritics_and_replace(input_str):
