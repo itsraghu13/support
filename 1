@@ -1,3 +1,57 @@
+import unicodedata
+
+def remove_diacritics_and_replace(input_str):
+    normalized_str = unicodedata.normalize('NFD', input_str)
+    output_str = ''
+    
+    replacement_dict = {
+        unicodedata.normalize('NFD', 'À'): 'A',
+        unicodedata.normalize('NFD', 'Á'): 'A',
+        unicodedata.normalize('NFD', 'Â'): 'A',
+        unicodedata.normalize('NFD', 'Ã'): 'A',
+        unicodedata.normalize('NFD', 'Ä'): 'A',
+        unicodedata.normalize('NFD', 'Å'): 'A',
+        unicodedata.normalize('NFD', 'à'): 'a',
+        unicodedata.normalize('NFD', 'á'): 'a',
+        unicodedata.normalize('NFD', 'â'): 'a',
+        unicodedata.normalize('NFD', 'ã'): 'a',
+        unicodedata.normalize('NFD', 'ä'): 'a',
+        unicodedata.normalize('NFD', 'å'): 'a',
+        unicodedata.normalize('NFD', 'È'): 'E',
+        unicodedata.normalize('NFD', 'É'): 'E',
+        # ... and so on for other characters in the dictionary
+    }
+    
+    for c in normalized_str:
+        output_str += replacement_dict.get(c, c)
+    
+    return output_str
+
+input_string = "Joaé Ëxample Âpple ñicely Þorn"
+modified_string = remove_diacritics_and_replace(input_string)
+print(modified_string)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def remove_diacritics_and_replace(input_str):
     normalized_str = unicodedata.normalize('NFD', input_str)
     output_str = ''
@@ -32,3 +86,4 @@ def remove_diacritics_and_replace(input_str):
 input_string = "Joaé Ëxample Âpple ñicely Þorn"
 modified_string = remove_diacritics_and_replace(input_string)
 print(modified_string)
+
