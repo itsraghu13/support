@@ -1,0 +1,84 @@
+import os
+import multiprocessing
+import argparse
+
+folder_path = r"C:\path\to\your\folder"
+sample_size = 5  # Number of rows to compare
+
+def compare_lines(lines1, lines2):
+    matching_lines = []
+
+    for line1, line2 in zip(lines1, lines2):
+        if line1.strip() == line2.strip():
+            matching_lines.append(line1.strip())
+
+    return matching_lines
+
+def search_lines(lines, search_string):
+    matching_lines = []
+
+    for line in lines:
+        if search_string in line:
+            matching_lines.append(line.strip())
+
+    return matching_lines
+
+def process_files(file_path1, file_path2, operation, search_string=None):
+    result = []
+    with open(file_path1, "r") as file1, open(file_path2, "r") as file2:
+        lines1 = [next(file1, None) for _ in range(sample_size)]
+        lines1 = [line for line in lines1 if line is not None]
+
+        lines2 = [next(file2, None) for _ in range(sample_size)]
+        lines2 = [line for line in lines2 if line is not None]
+
+    if operation == "compare" and lines1 and lines2:
+        result = compare_lines(lines1, lines2)
+    elif operation == "search" and search_string:
+        result = search_lines(lines1 + lines2, search_string)
+
+    return result, file_path1, file_path2
+
+def main():
+    parser = argparse.ArgumentParser(description="Compare files or search for a specific string.")
+    parser.add_argument("operation", choices=["compare", "search"], help="Specify 'compare' to compare files or 'search' to search for a string.")
+    parser.add_argument("--search-string", help="The string to search for when using 'search' operation.")
+
+    args = parser.parse_args()
+
+    matching_results = []
+
+    # Get the number of CPU cores
+    num_cores = multiprocessing.cpu_count()
+
+    # Create a multiprocessing pool
+    with multiprocessing.Pool(num_cores) as pool:
+        # Iterate over the files
+        file_list = os.listdir(folder_path)
+        for i, file_name1 in enumerate(file_list):
+            for j in range(i + 1, len(file_list)):
+                file_name2 = file_list[j]
+
+                if file_name1.endswith(".gz") and file_name2.endswith(".gz"):
+                    file_path1 = os.path.join(folder_path, file_name1)
+                    file_path2 = os.path.join(folder_path, file_name2)
+                    print(f"Processing {file_path1} and {file_path2}")
+
+                    # Use the pool to process the files based on the chosen operation
+                    result, file_path1, file_path2 = pool.apply(process_files, [file_path1, file_path2, args.operation, args.search_string])
+
+                    if result:
+                        print(f"Matching result(s) between {file_path1} and {file_path2} (sample):")
+                        for line in result:
+                            print(line)
+                        matching_results.append((file_path1, file_path2))
+
+    if matching_results:
+        print("Matching results:")
+        for file_pair in matching_results:
+            print(f"{file_pair[0]} and {file_pair[1]}")
+    else:
+        print("No matching results found.")
+
+if __name__ == "__main__":
+    main()
