@@ -19,24 +19,16 @@ FROM
 
 
 
--- Register the DataFrame as a temporary table
-CREATE OR REPLACE TEMPORARY VIEW your_temp_table AS
-SELECT *
-FROM yourDataFrame;
+import org.apache.spark.sql.functions._
 
--- Use Spark SQL to convert the column to JSON
-SELECT
-  map_from_entries(
-    transform(
-      filter(
-        transform(
-          split(yourColumn, '\\|'),
-          x -> split(x, ':')
-        ),
-        x -> size(x) = 2
-      ),
-      x -> (x[0], x[1])
-    )
-  ) AS json_result
-FROM your_temp_table;
+// Create a SparkSession
+val spark = SparkSession.builder.appName("ConvertColumnToJSON").getOrCreate()
 
+// Read the data from the SQL table
+val df = spark.read.sql("SELECT data FROM my_table")
+
+// Convert the "data" column to JSON
+val dfWithJson = df.withColumn("json", from_json(col("data"), MapType(StringType, StringType)))
+
+// Print the DataFrame
+dfWithJson.show()
