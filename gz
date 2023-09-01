@@ -1,5 +1,4 @@
 import os
-import gzip
 import multiprocessing
 
 folder_path = r"C:\path\to\your\folder"
@@ -17,7 +16,7 @@ def compare_lines(lines1, lines2):
 def process_files(file_path1, file_path2):
     matching_lines = []
 
-    with gzip.open(file_path1, "rt") as file1, gzip.open(file_path2, "rt") as file2:
+    with open(file_path1, "r") as file1, open(file_path2, "r") as file2:
         lines1 = [next(file1, None) for _ in range(sample_size)]
         lines1 = [line for line in lines1 if line is not None]
 
