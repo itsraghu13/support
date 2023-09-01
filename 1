@@ -1,3 +1,18 @@
+SELECT meta_copyactivity.activity_name, meta_copyactivity.parent_name, meta_pipelines.pipeline_name, COUNT(*) AS total_runs, AVG(meta_copyactivity.duration) AS avg_duration, SUM(meta_copyactivity.rows_processed) AS total_rows_processed FROM meta_copyactivity INNER JOIN meta_pipelines ON meta_copyactivity.parent_runid = meta_pipelines.run_id GROUP BY meta_copyactivity.activity_name, meta_copyactivity.parent_name, meta_pipelines.pipeline_name;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 from unidecode import unidecode
 
 def remove_diacritics_and_replace(input_str):
