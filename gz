@@ -1,4 +1,5 @@
 import gzip
+import os
 
 file_path_A = "path_to_file_A.gz"
 file_path_B = "path_to_file_B.gz"
@@ -6,9 +7,9 @@ file_path_B = "path_to_file_B.gz"
 def read_and_compare_files(file_path1, file_path2):
     matching_lines = []
 
-    with gzip.open(file_path1, "rb") as file1, gzip.open(file_path2, "rb") as file2:
-        lines1 = [line.decode("utf-8").strip('"').strip() for line in file1.readlines()]
-        lines2 = [line.decode("utf-8").strip('"').strip() for line in file2.readlines()]
+    with gzip.open(file_path1, "rt", encoding="utf-8") as file1, gzip.open(file_path2, "rt", encoding="utf-8") as file2:
+        lines1 = [line.strip('"').strip() for line in file1.readlines()]
+        lines2 = [line.strip('"').strip() for line in file2.readlines()]
 
     # Normalize and compare the lines
     for line1, line2 in zip(lines1, lines2):
