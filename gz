@@ -67,3 +67,101 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import os
+import multiprocessing
+import gzip
+import difflib
+
+folder_path = r"C:\path\to\your\folder"
+sample_size = 5  # Number of rows to compare
+
+def compare_lines(lines1, lines2):
+    matching_lines = []
+    
+    for line1, line2 in zip(lines1, lines2):
+        line1_stripped = line1.strip()
+        line2_stripped = line2.strip()
+
+        if line1_stripped == line2_stripped:
+            matching_lines.append(line1_stripped)
+
+    return matching_lines
+
+def process_files(file_paths):
+    matching_lines = []
+
+    if len(file_paths) != 2:
+        return matching_lines
+
+    try:
+        with gzip.open(file_paths[0], "rt") as file1, gzip.open(file_paths[1], "rt") as file2:
+            lines1 = [next(file1, None) for _ in range(sample_size)]
+            lines2 = [next(file2, None) for _ in range(sample_size)]
+            lines1 = [line for line in lines1 if line is not None]
+            lines2 = [line for line in lines2 if line is not None]
+
+        if len(lines1) == len(lines2):
+            matching_lines.extend(compare_lines(lines1, lines2))
+    except Exception as e:
+        print(f"Error processing files {file_paths}: {str(e)}")
+
+    return matching_lines
+
+def main():
+    matching_lines = []
+
+    # Get the number of cores
+    num_cores = multiprocessing.cpu_count()
+
+    # Create a multiprocessing pool
+    with multiprocessing.Pool(num_cores) as pool:
+        file_paths = []
+
+        # Iterate over the files
+        for file_name in os.listdir(folder_path):
+            if file_name.endswith(".gz"):
+                file_path = os.path.join(folder_path, file_name)
+                file_paths.append(file_path)
+
+        # Divide the list of file paths into chunks for parallel processing
+        chunk_size = len(file_paths) // num_cores
+        file_path_chunks = [file_paths[i:i+chunk_size] for i in range(0, len(file_paths), chunk_size)]
+
+        # Use the pool to compare the files
+        results = pool.map(process_files, file_path_chunks)
+
+        for result in results:
+            matching_lines.extend(result)
+
+    if matching_lines:
+        print("Matching lines found (sample):")
+        for line in matching_lines:
+            print(line)
+    else:
+        print("No matching lines found in the gzipped files.")
+
+if __name__ == "__main__":
+    main()
+
