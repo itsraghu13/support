@@ -1,4 +1,4 @@
-SELECT meta_copyactivity.activity_name, meta_copyactivity.parent_name, meta_pipelines.pipeline_name, COUNT(*) AS total_runs, AVG(meta_copyactivity.duration) AS avg_duration, SUM(meta_copyactivity.rows_processed) AS total_rows_processed FROM meta_copyactivity INNER JOIN meta_pipelines ON meta_copyactivity.parent_runid = meta_pipelines.run_id GROUP BY meta_copyactivity.activity_name, meta_copyactivity.parent_name, meta_pipelines.pipeline_name;
+SELECT meta_pipelines.pipeline_name, meta_pipelines.status, AVG(meta_copyactivity.rows_read) AS avg_rows_read, AVG(meta_copyactivity.data_read) AS avg_data_read, AVG(meta_copyactivity.rows_written) AS avg_rows_written, AVG(meta_copyactivity.data_written) AS avg_data_written FROM meta_pipelines INNER JOIN meta_copyactivity ON meta_pipelines.run_id = meta_copyactivity.parent_runid GROUP BY meta_pipelines.pipeline_name, meta_pipelines.status
 
 
 
