@@ -84,11 +84,6 @@ if __name__ == "__main__":
 
 
 
-
-
-
-
-
 import os
 import multiprocessing
 import gzip
@@ -101,8 +96,9 @@ def compare_lines(lines1, lines2):
     matching_lines = []
     
     for line1, line2 in zip(lines1, lines2):
-        line1_stripped = line1.strip()
-        line2_stripped = line2.strip()
+        # Remove leading and trailing whitespace and compare ignoring quotes
+        line1_stripped = line1.strip().strip('"')
+        line2_stripped = line2.strip().strip('"')
 
         if line1_stripped == line2_stripped:
             matching_lines.append(line1_stripped)
@@ -164,4 +160,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
