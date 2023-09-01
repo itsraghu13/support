@@ -19,15 +19,24 @@ FROM
 
 
 
+-- Register the DataFrame as a temporary table
+CREATE OR REPLACE TEMPORARY VIEW your_temp_table AS
+SELECT *
+FROM yourDataFrame;
+
+-- Use Spark SQL to convert the column to JSON
 SELECT
-  json_object_agg(split_parts[1], split_parts[2]) AS json_result
-FROM (
-  SELECT
-    regexp_split_to_array(key_value_pairs, ':') AS split_parts
-  FROM (
-    SELECT
-      regexp_split_to_array(your_column, '\|') AS key_value_pairs
-    FROM your_table
-  ) subquery
-) subquery2;
+  map_from_entries(
+    transform(
+      filter(
+        transform(
+          split(yourColumn, '\\|'),
+          x -> split(x, ':')
+        ),
+        x -> size(x) = 2
+      ),
+      x -> (x[0], x[1])
+    )
+  ) AS json_result
+FROM your_temp_table;
 
