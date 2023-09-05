@@ -1,6 +1,69 @@
 WITH ActivityTrend AS (
     SELECT
         DATE(mc.request_date) AS activity_date,
+        SUM(mc.rows_read) - SUM(mc.rows_written) AS total_rows_loaded
+    FROM
+        meta_copyactivity mc
+    GROUP BY
+        DATE(mc.request_date)
+    HAVING
+        SUM(mc.rows_read) - SUM(mc.rows_written) != 0
+),
+PipelineTrend AS (
+    SELECT
+        DATE(mp.start_time) AS pipeline_date,
+        COUNT(*) AS pipeline_count
+    FROM
+        meta_pipelines mp
+    GROUP BY
+        DATE(mp.start_time)
+)
+SELECT
+    a.activity_date,
+    a.total_rows_loaded AS total_rows_loaded_from_activities,
+    p.pipeline_date,
+    p.pipeline_count
+FROM
+    ActivityTrend a
+FULL OUTER JOIN
+    PipelineTrend p ON a.activity_date = p.pipeline_date
+ORDER BY
+    COALESCE(a.activity_date, p.pipeline_date);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+WITH ActivityTrend AS (
+    SELECT
+        DATE(mc.request_date) AS activity_date,
         COUNT(*) AS activity_count
     FROM
         meta_copyactivity mc
