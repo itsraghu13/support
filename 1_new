@@ -1,0 +1,68 @@
+import os
+import multiprocessing
+
+folder_path = r"C:\path\to\your\folder"
+sample_size = 5  # Number of rows to compare
+
+def compare_lines(lines1, lines2):
+    matching_lines = []
+
+    if lines1 != lines2:
+        for line1, line2 in zip(lines1, lines2):
+            if line1 == line2:
+                matching_lines.append(line1)
+
+    return matching_lines
+
+def process_files(file_path1, file_path2):
+    matching_lines = []
+
+    with open(file_path1, "r") as file1, open(file_path2, "r") as file2:
+        lines1 = [next(file1, None) for _ in range(sample_size)]
+        lines1 = [line for line in lines1 if line is not None]
+
+        lines2 = [next(file2, None) for _ in range(sample_size)]
+        lines2 = [line for line in lines2 if line is not None]
+
+    if lines1 != lines2:
+        matching_lines = compare_lines(lines1, lines2)
+
+    return matching_lines, file_path1, file_path2
+
+def main():
+    matching_file_pairs = []
+
+    # Get the number of CPU cores
+    num_cores = multiprocessing.cpu_count()
+
+    # Create a multiprocessing pool
+    with multiprocessing.Pool(num_cores) as pool:
+        # Iterate over the files
+        file_list = os.listdir(folder_path)
+        for i, file_name1 in enumerate(file_list):
+            for j in range(i + 1, len(file_list)):
+                file_name2 = file_list[j]
+
+                if file_name1.endswith(".gz") and file_name2.endswith(".gz"):
+                    file_path1 = os.path.join(folder_path, file_name1)
+                    file_path2 = os.path.join(folder_path, file_name2)
+                    print(f"Comparing {file_path1} and {file_path2}")
+
+                    # Use the pool to compare the files
+                    matching_lines, file_path1, file_path2 = pool.apply(process_files, [file_path1, file_path2])
+
+                    if matching_lines:
+                        print(f"Matching line(s) found between {file_path1} and {file_path2} (sample):")
+                        for line in matching_lines:
+                            print(line)
+                        matching_file_pairs.append((file_path1, file_path2))
+
+    if matching_file_pairs:
+        print("File pairs containing matching lines:")
+        for file_pair in matching_file_pairs:
+            print(f"{file_pair[0]} and {file_pair[1]}")
+    else:
+        print("No matching lines found between any file pairs.")
+
+if __name__ == "__main__":
+    main()
