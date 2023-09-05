@@ -38,10 +38,11 @@ FULL OUTER JOIN
     PipelineTrend p ON a.activity_date = p.pipeline_date
 FULL OUTER JOIN
     DataLoadTrend d ON a.activity_date = d.load_date
-HAVING
+WHERE
     d.total_row_count_loaded != 0
 ORDER BY
     COALESCE(a.activity_date, p.pipeline_date, d.load_date);
+
 
 
 
