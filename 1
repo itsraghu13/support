@@ -1,31 +1,36 @@
 SELECT meta_pipelines.pipeline_name, meta_pipelines.status, AVG(meta_copyactivity.rows_read) AS avg_rows_read, AVG(meta_copyactivity.data_read) AS avg_data_read, AVG(meta_copyactivity.rows_written) AS avg_rows_written, AVG(meta_copyactivity.data_written) AS avg_data_written FROM meta_pipelines INNER JOIN meta_copyactivity ON meta_pipelines.run_id = meta_copyactivity.parent_runid GROUP BY meta_pipelines.pipeline_name, meta_pipelines.status
 
 
-SELECT
-    mp.run_id AS pipeline_run_id,
-    mp.start_time AS pipeline_start_time,
-    mp.end_time AS pipeline_end_time,
-    mc.activity_runid AS activity_run_id,
-    mc.activity_name AS activity_name,
-    dl.table_name AS loaded_table,
-    SUM(dl.row_count) AS total_row_count_loaded
-FROM
-    meta_pipelines mp
-JOIN
-    meta_copyactivity mc ON mp.run_id = mc.parent_runid
-LEFT JOIN
-    dataload dl ON mc.activity_runid = dl.parent_runid
-GROUP BY
-    mp.run_id,
-    mp.start_time,
-    mp.end_time,
-    mc.activity_runid,
-    mc.activity_name,
-    dl.table_name
-ORDER BY
-    pipeline_run_id,
-    activity_run_id,
-    loaded_table;
+WITH RankedData AS (
+    SELECT
+        mp.run_id AS pipeline_run_id,
+        mp.start_time AS pipeline_start_time,
+        mp.end_time AS pipeline_end_time,
+        mc.activity_runid AS activity_run_id,
+        mc.activity_name AS activity_name,
+        dl.table_name AS loaded_table,
+        SUM(dl.row_count) AS total_row_count_loaded,
+        DENSE_RANK() OVER (ORDER BY SUM(dl.row_count) DESC) AS rank
+    FROM
+        meta_pipelines mp
+    JOIN
+        meta_copyactivity mc ON mp.run_id = mc.parent_runid
+    LEFT JOIN
+        dataload dl ON mc.activity_runid = dl.parent_runid
+    GROUP BY
+        mp.run_id,
+        mp.start_time,
+        mp.end_time,
+        mc.activity_runid,
+        mc.activity_name,
+        dl.table_name
+    HAVING
+        SUM(dl.row_count) != 0
+)
+SELECT *
+FROM RankedData
+ORDER BY rank, pipeline_run_id, activity_run_id, loaded_table;
+
 
 
 
