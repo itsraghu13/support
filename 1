@@ -9,12 +9,12 @@ WITH ActivityTrend AS (
 ),
 PipelineTrend AS (
     SELECT
-        DATE(mp.request_date) AS pipeline_date,
+        DATE(mp.start_time) AS pipeline_date,
         COUNT(*) AS pipeline_count
     FROM
         meta_pipelines mp
     GROUP BY
-        DATE(mp.request_date)
+        DATE(mp.start_time)
 ),
 DataLoadTrend AS (
     SELECT
@@ -40,6 +40,7 @@ FULL OUTER JOIN
     DataLoadTrend d ON a.activity_date = d.load_date
 ORDER BY
     COALESCE(a.activity_date, p.pipeline_date, d.load_date);
+
 
 
 
