@@ -26,11 +26,7 @@ def process_files(file_path1, file_path2):
             if line1.strip() != line2.strip():
                 non_matching_lines.append(line1.strip())
 
-        if non_matching_lines:
-            return non_matching_lines, file_path1, file_path2
-
-        else:
-            return None
+        return non_matching_lines
 
     else:
         return None
@@ -55,7 +51,7 @@ def main():
                     print(f"Comparing {file_path1} and {file_path2}")
 
                     # Use the pool to compare the files
-                    non_matching_lines, file_path1, file_path2 = pool.apply(process_files, [file_path1, file_path2])
+                    non_matching_lines = pool.apply(process_files, [file_path1, file_path2])
 
                     if non_matching_lines:
                         print(f"Non-matching line(s) found between {file_path1} and {file_path2} (sample):")
