@@ -162,9 +162,10 @@ sample_size = 5  # Number of rows to compare
 def compare_lines(lines1, lines2):
     matching_lines = []
 
-    for line1, line2 in zip(lines1, lines2):
-        if line1.strip() == line2.strip():
-            matching_lines.append(line1.strip())
+    if lines1 != lines2:
+        for line1, line2 in zip(lines1, lines2):
+            if line1.strip() == line2.strip():
+                matching_lines.append(line1.strip())
 
     return matching_lines
 
@@ -178,7 +179,7 @@ def process_files(file_path1, file_path2):
         lines2 = [next(file2, None) for _ in range(sample_size)]
         lines2 = [line for line in lines2 if line is not None]
 
-    if lines1 == lines2:
+    if lines1 != lines2:
         matching_lines = compare_lines(lines1, lines2)
 
     return matching_lines, file_path1, file_path2
@@ -220,6 +221,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
