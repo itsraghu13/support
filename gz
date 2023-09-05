@@ -78,11 +78,6 @@ if __name__ == "__main__":
 
 
 
-
-
-
-
-
 import os
 import multiprocessing
 
@@ -114,7 +109,7 @@ def process_files(file_path1, file_path2):
     return matching_lines, file_path1, file_path2
 
 def main():
-    matching_file_pairs = []
+    differing_file_pairs = []
 
     # Get the number of CPU cores
     num_cores = multiprocessing.cpu_count()
@@ -136,22 +131,19 @@ def main():
                     matching_lines, file_path1, file_path2 = pool.apply(process_files, [file_path1, file_path2])
 
                     if matching_lines:
-                        print(f"Matching line(s) found between {file_path1} and {file_path2} (sample):")
+                        print(f"Differences found between {file_path1} and {file_path2} (sample):")
                         for line in matching_lines:
                             print(line)
-                        matching_file_pairs.append((file_path1, file_path2))
-                    else:
-                        print(f"No matching lines found between {file_path1} and {file_path2}")
-                        # Break out of the inner loop when no matching lines are found
-                        break
+                        differing_file_pairs.append((file_path1, file_path2))
 
-    if matching_file_pairs:
-        print("File pairs containing matching lines:")
-        for file_pair in matching_file_pairs:
+    if differing_file_pairs:
+        print("File pairs containing differences:")
+        for file_pair in differing_file_pairs:
             print(f"{file_pair[0]} and {file_pair[1]}")
     else:
-        print("No matching lines found between any file pairs.")
+        print("No differences found between any file pairs.")
 
 if __name__ == "__main__":
     main()
+
 
