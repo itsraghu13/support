@@ -1,3 +1,54 @@
+WITH ActivityTrend AS (
+    SELECT
+        DATE(mc.request_date) AS activity_date,
+        COUNT(*) AS activity_count
+    FROM
+        meta_copyactivity mc
+    GROUP BY
+        DATE(mc.request_date)
+),
+PipelineTrend AS (
+    SELECT
+        DATE(mp.request_date) AS pipeline_date,
+        COUNT(*) AS pipeline_count
+    FROM
+        meta_pipelines mp
+    GROUP BY
+        DATE(mp.request_date)
+),
+DataLoadTrend AS (
+    SELECT
+        DATE(dl.process_load_date) AS load_date,
+        SUM(dl.row_count) AS total_row_count_loaded
+    FROM
+        dataload dl
+    GROUP BY
+        DATE(dl.process_load_date)
+)
+SELECT
+    a.activity_date,
+    a.activity_count,
+    p.pipeline_date,
+    p.pipeline_count,
+    d.load_date,
+    d.total_row_count_loaded
+FROM
+    ActivityTrend a
+FULL OUTER JOIN
+    PipelineTrend p ON a.activity_date = p.pipeline_date
+FULL OUTER JOIN
+    DataLoadTrend d ON a.activity_date = d.load_date
+ORDER BY
+    COALESCE(a.activity_date, p.pipeline_date, d.load_date);
+
+
+
+
+
+
+
+
+
 SELECT meta_pipelines.pipeline_name, meta_pipelines.status, AVG(meta_copyactivity.rows_read) AS avg_rows_read, AVG(meta_copyactivity.data_read) AS avg_data_read, AVG(meta_copyactivity.rows_written) AS avg_rows_written, AVG(meta_copyactivity.data_written) AS avg_data_written FROM meta_pipelines INNER JOIN meta_copyactivity ON meta_pipelines.run_id = meta_copyactivity.parent_runid GROUP BY meta_pipelines.pipeline_name, meta_pipelines.status
 
 
