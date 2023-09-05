@@ -21,9 +21,15 @@ def process_files(file_path1, file_path2):
         lines2 = file2.readlines()[:sample_size]
 
     if lines1 != lines2:
-        matching_lines = compare_lines(lines1, lines2)
+        non_matching_lines = []
+        for line1, line2 in zip(lines1, lines2):
+            if line1.strip() != line2.strip():
+                non_matching_lines.append(line1.strip())
 
-    return matching_lines, file_path1, file_path2
+        return non_matching_lines, file_path1, file_path2
+
+    else:
+        return None
 
 def main():
     matching_file_pairs = []
@@ -45,22 +51,22 @@ def main():
                     print(f"Comparing {file_path1} and {file_path2}")
 
                     # Use the pool to compare the files
-                    matching_lines, file_path1, file_path2 = pool.apply(process_files, [file_path1, file_path2])
+                    non_matching_lines, file_path1, file_path2 = pool.apply(process_files, [file_path1, file_path2])
 
-                    if matching_lines:
-                        print(f"Matching line(s) found between {file_path1} and {file_path2} (sample):")
-                        for line in matching_lines:
+                    if non_matching_lines:
+                        print(f"Non-matching line(s) found between {file_path1} and {file_path2} (sample):")
+                        for line in non_matching_lines:
                             print(line)
                         matching_file_pairs.append((file_path1, file_path2))
                     else:
                         print(f"{file_path1} and {file_path2} are good.")
 
     if matching_file_pairs:
-        print("File pairs containing matching lines:")
+        print("File pairs containing non-matching lines:")
         for file_pair in matching_file_pairs:
             print(f"{file_pair[0]} and {file_pair[1]}")
     else:
-        print("No matching lines found between any file pairs.")
+        print("No non-matching lines found between any file pairs.")
 
 if __name__ == "__main__":
     main()
