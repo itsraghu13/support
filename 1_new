@@ -26,7 +26,11 @@ def process_files(file_path1, file_path2):
             if line1.strip() != line2.strip():
                 non_matching_lines.append(line1.strip())
 
-        return non_matching_lines, file_path1, file_path2
+        if non_matching_lines:
+            return non_matching_lines, file_path1, file_path2
+
+        else:
+            return None
 
     else:
         return None
