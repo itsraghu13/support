@@ -155,15 +155,19 @@ if __name__ == "__main__":
 
 import os
 import multiprocessing
-import filecmp
 
 folder_path = r"C:\path\to\your\folder"
+sample_size = 10  # Number of lines to compare
 
-def compare_files(file1, file2):
-    return filecmp.cmp(file1, file2)
+def compare_first_n_lines(file1, file2, n):
+    with open(file1, "r") as f1, open(file2, "r") as f2:
+        lines1 = [next(f1) for _ in range(n)]
+        lines2 = [next(f2) for _ in range(n)]
 
-def process_files(file_path1, file_path2):
-    return compare_files(file_path1, file_path2), file_path1, file_path2
+    return lines1 == lines2
+
+def process_files(file_path1, file_path2, n):
+    return compare_first_n_lines(file_path1, file_path2, n), file_path1, file_path2
 
 def main():
     differing_file_pairs = []
@@ -182,10 +186,10 @@ def main():
                 if file_name1.endswith(".gz") and file_name2.endswith(".gz"):
                     file_path1 = os.path.join(folder_path, file_name1)
                     file_path2 = os.path.join(folder_path, file_name2)
-                    print(f"Comparing {file_path1} and {file_path2}")
+                    print(f"Comparing the first {sample_size} lines of {file_path1} and {file_path2}")
 
-                    # Use the pool to compare the files
-                    is_different, file_path1, file_path2 = pool.apply(process_files, [file_path1, file_path2])
+                    # Use the pool to compare the first N lines of the files
+                    is_different, file_path1, file_path2 = pool.apply(process_files, [file_path1, file_path2, sample_size])
 
                     if is_different:
                         print(f"Differences found between {file_path1} and {file_path2}")
@@ -200,6 +204,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
