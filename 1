@@ -1,3 +1,40 @@
+SELECT
+    meta_pipelines.pipeline_name,
+    AVG(meta_copyactivity.duration) AS avg_duration,
+    SUM(meta_copyactivity.rows_processed) / COUNT(*) AS avg_rows,
+    MAX(meta_copyactivity.duration) AS max_duration,
+    avg_rows_15
+FROM meta_copyactivity
+INNER JOIN meta_pipelines ON meta_copyactivity.parent_runid = meta_pipelines.run_id
+INNER JOIN (
+    SELECT
+        meta_pipelines.pipeline_name,
+        AVG(meta_copyactivity.rows_processed) AS avg_rows_15
+    FROM
+        meta_copyactivity
+    INNER JOIN meta_pipelines ON meta_copyactivity.parent_runid = meta_pipelines.run_id
+    GROUP BY
+        meta_pipelines.pipeline_name
+) AS subquery ON meta_pipelines.pipeline_name = subquery.pipeline_name
+GROUP BY
+    meta_pipelines.pipeline_name, avg_rows_15;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 SELECT meta_pipelines.pipeline_name,
        AVG(meta_copyactivity.duration) AS avg_duration,
        SUM(meta_copyactivity.rows_processed) / COUNT(*) AS avg_rows,
