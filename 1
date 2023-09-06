@@ -1,4 +1,20 @@
 SELECT
+  meta_pipelines.pipeline_name,
+  CONCAT(COUNT(CASE WHEN meta_copyactivity.status = 'SUCCESS' THEN 1 END), ', ', COUNT(CASE WHEN meta_copyactivity.status = 'FAILURE' THEN 1 END)) AS total_count,
+  meta_copyactivity.start_time
+FROM meta_copyactivity
+INNER JOIN meta_pipelines ON meta_copyactivity.parent_runid = meta_pipelines.run_id
+GROUP BY meta_pipelines.pipeline_name, meta_copyactivity.start_time;
+
+
+
+
+
+
+
+
+
+SELECT
     meta_pipelines.pipeline_name,
     AVG(meta_copyactivity.duration) AS avg_duration,
     SUM(meta_copyactivity.rows_processed) / COUNT(*) AS avg_rows,
