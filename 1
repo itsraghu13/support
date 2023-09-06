@@ -1,9 +1,8 @@
 SELECT AVG(
-    INTERVAL SUBSTRING_INDEX(duration, ' ', 1) MINUTE +
-    SUBSTRING_INDEX(SUBSTRING_INDEX(duration, ' ', -2), ' ', -1) SECOND
-) AS avg_duration
-FROM durations;
-
+    CAST(SUBSTRING_INDEX(duration, ' min ', 1) AS INT) * 60 +
+    CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(duration, ' min ', -1), ' sec', 1) AS INT)
+  ) AS avg_duration_seconds
+  FROM durations
 
 
 
