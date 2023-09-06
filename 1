@@ -5,6 +5,12 @@ SELECT AVG(
   FROM durations
 
 
+SELECT AVG(
+    CAST(SUBSTRING_INDEX(duration, ' min ', 1) AS DECIMAL) +
+    CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(duration, ' min ', -1), ' sec', 1) AS DECIMAL) / 60
+  ) AS avg_duration_minutes
+
+
 
 
 
