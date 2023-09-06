@@ -1,3 +1,15 @@
+SELECT meta_pipelines.pipeline_name,
+       AVG(meta_copyactivity.duration) AS avg_duration,
+       SUM(meta_copyactivity.rows_processed) / COUNT(*) AS avg_rows,
+       MAX(meta_copyactivity.duration) AS max_duration,
+       AVG(meta_copyactivity.rows_processed) OVER (PARTITION BY meta_pipelines.pipeline_name ORDER BY meta_copyactivity.request_date ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS avg_rows_15
+FROM meta_copyactivity
+INNER JOIN meta_pipelines ON meta_copyactivity.parent_runid = meta_pipelines.run_id
+GROUP BY meta_pipelines.pipeline_name;
+
+
+
+
 SELECT AVG(
     CAST(SUBSTRING_INDEX(duration, ' min ', 1) AS INT) * 60 +
     CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(duration, ' min ', -1), ' sec', 1) AS INT)
