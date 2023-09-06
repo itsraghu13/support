@@ -1,3 +1,16 @@
+SELECT AVG(
+    INTERVAL SUBSTRING_INDEX(duration, ' ', 1) MINUTE +
+    SUBSTRING_INDEX(SUBSTRING_INDEX(duration, ' ', -2), ' ', -1) SECOND
+) AS avg_duration
+FROM durations;
+
+
+
+
+
+
+
+
 WITH ActivityTrend AS (
     SELECT
         DATE(mc.request_date) AS activity_date,
