@@ -1,9 +1,14 @@
-SELECT tmp.pipeline_name,
-AVG(tmc.rows_read) OVER (PARTITION BY tmp.pipeline_name ORDER BY cast(tmp.start_time as date) ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS avg_rows_15,
-AVG(tmc.rows_read) OVER (PARTITION BY tmp.pipeline_name ORDER BY cast(tmp.start_time as date) ROWS BETWEEN 29 PRECEDING AND CURRENT ROW) AS avg_rows_30
-FROM structured.t_copy tmc
-INNER JOIN structured.t__pipe tmp ON tmc.parent_runid - tmp.run_id
-GROUP BY tmp.pipeline_name;
+SELECT
+  meta_pipelines.pipeline_name,
+  COUNT(*) AS total_run,
+  AVG(meta_copyactivity.rows_processed) AS avg_rows,
+  AVG(meta_copyactivity.rows_processed) OVER (PARTITION BY meta_pipelines.pipeline_name ORDER BY meta_copyactivity.request_date ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS avg_rows_15,
+  AVG(meta_copyactivity.rows_processed) OVER (PARTITION BY meta_pipelines.pipeline_name ORDER BY meta_copyactivity.request_date ROWS BETWEEN 29 PRECEDING AND CURRENT ROW) AS avg_rows_30,
+  AVG(meta_copyactivity.duration) OVER (PARTITION BY meta_pipelines.pipeline_name) AS avg_duration
+FROM meta_copyactivity
+INNER JOIN meta_pipelines ON meta_copyactivity.parent_runid = meta_pipelines.run_id
+GROUP BY meta_pipelines.pipeline_name;
+
 
 
 
