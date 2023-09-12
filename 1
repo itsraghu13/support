@@ -8,14 +8,12 @@ SELECT
     CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(tmp.duration, ' min', -1), ' sec', 1) AS DECIMAL) / 60
   ) AS avg_duration,
   AVG(tmc.rows_read) AS avg_rows,
-  MAX(tmp.duration) AS max_duration,
-  MAX(tmp.start_time) AS max_start_time,
-  MAX(tmc.rows_read) AS max_rows_read,
   AVG(tmc.rows_read) OVER (PARTITION BY tmp.pipeline_name ORDER BY CAST(tmp.start_time AS DATE) ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS avg_runtime_15,
   AVG(tmc.rows_read) OVER (PARTITION BY tmp.pipeline_name ORDER BY CAST(tmp.start_time AS DATE) ROWS BETWEEN 29 PRECEDING AND CURRENT ROW) AS avg_runtime_30
 FROM structured.t_copy tmc
 INNER JOIN structured.t__pipe tmp ON tmc.parent_runid = tmp.run_id
 GROUP BY tmc.activity_name, tmc.parent_name, tmp.pipeline_name;
+
 
 
 
