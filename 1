@@ -20,6 +20,15 @@ FROM your_table;
 
 
 
+SELECT
+    TRANSFORM(
+        SPLIT(data_column, '|'),
+        x -> STR_TO_MAP(x, ':', ',')
+    ) AS json_data
+FROM your_table;
+
+
+
 
 SELECT CONCAT('{ "data": [', REGEXP_REPLACE(data_column, '\\|', ', '), '] }') AS json_data
 FROM your_table;
