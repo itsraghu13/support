@@ -1,3 +1,61 @@
+
+WITH CTE AS (
+  SELECT
+    tmc.activity_name,
+    tmc.parent_name,
+    tmp.pipeline_name,
+    tmp.duration,
+    tmc.rows_read,
+    CAST(SUBSTRING_INDEX(tmp.duration, ' min', 1) AS DECIMAL) +
+    CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(tmp.duration, ' min', -1), ' sec', 1) AS DECIMAL) / 60 AS duration_in_hours
+  FROM structured.t_copy tmc
+  INNER JOIN structured.t__pipe tmp ON tmc.parent_runid = tmp.run_id
+)
+SELECT
+  activity_name,
+  parent_name,
+  pipeline_name,
+  COUNT(*) AS total_runs,
+  ROUND(AVG(duration_in_hours), 2) AS avg_duration,
+  ROUND(AVG(rows_read), 2) AS avg_rows,
+  AVG(rows_read) OVER (PARTITION BY pipeline_name ORDER BY CAST(tmp.start_time AS DATE) ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS avg_runtime_15,
+  AVG(rows_read) OVER (PARTITION BY pipeline_name ORDER BY CAST(tmp.start_time AS DATE) ROWS BETWEEN 29 PRECEDING AND CURRENT ROW) AS avg_runtime_30
+FROM CTE
+GROUP BY activity_name, parent_name, pipeline_name;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 r'/\/\/|"\/"|\/\|'
 
 r'/\/\/|"\/"|\/\|'
