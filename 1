@@ -12,6 +12,8 @@ r'/(//|\\"|\\|)'
 
 
 
+SELECT CONCAT('{ "data": [', REGEXP_REPLACE(data_column, '\\|', ', '), '] }') AS json_data
+FROM your_table;
 
 
 
