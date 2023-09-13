@@ -8,6 +8,15 @@ r"/{2}"\/"{2}\|"
 r'/(//|\\"|\\|)'
 
 
+SELECT
+    TRANSFORM(
+        SPLIT(data_column, '\\|'),
+        x -> MAP(
+            SPLIT(x, ':')[0],  -- Key
+            SPLIT(x, ':')[1]   -- Value
+        )
+    ) AS json_data
+FROM your_table;
 
 
 
