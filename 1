@@ -19,6 +19,39 @@ SELECT
 FROM your_table;
 
 
+SELECT
+  JSON_OBJECT(key, value) AS json_data
+FROM (
+  SELECT
+    SPLIT(data_column, '|') AS row,
+    SPLIT(row, ':')[0] AS key,
+    SPLIT(row, ':')[1] AS value
+  FROM your_table
+)
+WHERE
+  key != 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+SELECT
+    TRANSFORM(
+        SPLIT(data_column, '|'),
+        x -> STR_TO_MAP(x, ':', ',')
+    ) AS json_data
+FROM your_table;
+
 
 SELECT
     TRANSFORM(
