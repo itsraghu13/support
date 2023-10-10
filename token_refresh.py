@@ -104,3 +104,61 @@ def get_token():
         print(f"Error while obtaining a new token: {str(e)}")
         return None
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import requests
+import json
+
+def get_token():
+    # Define your Azure AD authentication parameters
+    tenant_id = 'your-tenant-id'
+    client_id = 'your-client-id'
+    client_secret = 'your-client-secret'
+    resource = 'https://management.azure.com/'  # Azure Management API resource
+    token_endpoint = f'https://login.microsoftonline.com/{tenant_id}/oauth2/token'
+
+    # Construct the token request data
+    token_request_data = {
+        'grant_type': 'client_credentials',
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'resource': resource
+    }
+
+    try:
+        # Send a POST request to the token endpoint
+        response = requests.post(token_endpoint, data=token_request_data)
+
+        if response.status_code == 200:
+            # Parse the JSON response to get the access token
+            token_info = response.json()
+            access_token = token_info.get('access_token')
+            return access_token
+        else:
+            print(f"Failed to obtain a new token. Status code: {response.status_code}")
+            return None
+
+    except Exception as e:
+        print(f"Error while obtaining a new token: {str(e)}")
+        return None
+
+# Example usage:
+access_token = get_token()
+
+
