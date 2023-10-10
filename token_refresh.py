@@ -59,3 +59,48 @@ def get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, la
 
 # Example usage:
 pipeline_runs_data = get_all_pipeline_runs(subscription_id, resource_group_name, factory_name, last_updated_after, last_updated_before)
+
+
+
+
+
+
+
+
+
+
+import adal
+
+def get_token():
+    # Define your Azure AD authentication parameters
+    tenant_id = 'your-tenant-id'
+    client_id = 'your-client-id'
+    client_secret = 'your-client-secret'
+    resource = 'https://management.azure.com/'  # Azure Management API resource
+
+    # Create an ADAL AuthenticationContext
+    authority_url = f'https://login.microsoftonline.com/{tenant_id}'
+    context = adal.AuthenticationContext(authority_url)
+
+    # Define token request parameters, including a desired expiration time
+    token_data = {
+        "grant_type": "client_credentials",
+        "resource": resource,
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "token_lifetime": "3600"  # Set to the desired token duration in seconds (e.g., 1 hour)
+    }
+
+    try:
+        response = context.acquire_token_with_client_credentials(resource, client_id, client_secret)
+
+        if 'access_token' in response:
+            return response['access_token']
+        else:
+            print("Failed to obtain a new token")
+            return None
+
+    except Exception as e:
+        print(f"Error while obtaining a new token: {str(e)}")
+        return None
+
