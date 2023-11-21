@@ -1,0 +1,22 @@
+REPLACE PROCEDURE GenerateLoadQuery (
+    IN databaseName VARCHAR(128),
+    IN tableName VARCHAR(128),
+    IN loadType VARCHAR(10)
+)
+BEGIN
+    DECLARE dynamicSQL VARCHAR(1000);
+
+    /* Construct the dynamic SQL statement based on load type */
+    IF loadType = 'full' THEN
+        SET dynamicSQL = 'SELECT * FROM ' || TRIM(databaseName) || '.' || TRIM(tableName) || ';';
+    ELSEIF loadType = 'watermark' THEN
+        SET dynamicSQL = 'SELECT * FROM ' || TRIM(databaseName) || '.' || TRIM(tableName) || ' WHERE column = watermark;';
+    ELSE
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Invalid load type. Please use "full" or "watermark".';
+    END IF;
+
+    /* Execute the dynamic SQL statement */
+    EXECUTE IMMEDIATE dynamicSQL;
+
+END;
