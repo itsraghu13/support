@@ -2,6 +2,43 @@ https://lucavallarelli.altervista.org/blog/service-principal-authentication-data
 
 
 
+SELECT
+    config.config_id,
+    CONCAT('SELECT * FROM ', config.schema_name, '.', REPLACE(config.table_name, 'dbo.', '')) AS query,
+    DATE_FORMAT(delta_end_time, 'yyyy/MM/dd HH:mm:ss') AS begin_time,
+    DATE_FORMAT(delta_end_time, 'yyyy/MM/dd HH:mm:ss') AS end_time,
+    config.table_name,
+    config.load_type,
+    config.schema_name,
+    config.do_name,
+    config.source_name,
+    config.db_Type,
+    config.frequency,
+    config.secret_name,
+    config.watermark_Columns,
+    config.custom_refresh,
+    dataload.process_id
+FROM
+    structured.t_database_config config
+LEFT JOIN (
+    SELECT
+        t_dataload.config_id,
+        MAX(CAST(REPLACE(t_dataload.process_id, 'ID', '') AS INT)) AS max_process_id
+    FROM
+        structured.t_dataload t_dataload
+    WHERE
+        t_dataload.status = 'success'
+    GROUP BY
+        t_dataload.config_id
+) max_processid ON config.config_id = max_processid.config_id
+LEFT JOIN structured.t_dataload dataload ON config.config_id = dataload.config_id
+    AND CAST(REPLACE(dataload.process_id, 'ID', '') AS INT) = max_processid.max_process_id
+WHERE
+    config.do_name = 'int1'
+    AND config.author = 'Raghav'
+    AND config.db_Type = 'sql server';
+
+
 
 
 
