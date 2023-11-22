@@ -1,3 +1,39 @@
+SELECT
+    td.config_id,
+    CONCAT('ID', config_id, 'R', MAX(CAST(REPLACE(process_id, CONCAT('ID', config_id, 'R'), '') AS INT)) + 1) AS process_id,
+    CASE
+        WHEN EXISTS (
+            SELECT 1
+            FROM structured.t_dataload_poc existing
+            WHERE existing.config_id = td.config_id
+              AND existing.table_status_run = 'running'
+        ) THEN 'duplicate'
+        ELSE 'running'
+    END AS table_status_run
+FROM
+    structured.t_dataload_poc td
+WHERE
+    td.config_id IN (
+        SELECT
+            config_id
+        FROM
+            structured.t_database_config
+        WHERE
+            db_Type = 'sql server'
+            AND config_id = 56
+    )
+GROUP BY
+    config_id, table_run_status;
+
+
+
+
+
+
+
+
+
+
 -- Insert records into t_dataload with process_id and status 'running'
 INSERT INTO structured.t_dataload (config_id, process_id, status)
 SELECT
