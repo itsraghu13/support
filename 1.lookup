@@ -129,6 +129,57 @@ ON config.config_id = dataload.config_id
 WHERE
     do_name = 'int1'
     AND author = 'Raghav'
+
+
+
+
+
+
+
+
+
+
+
+
+SELECT
+    config_id,
+    COALESCE(MAX(CAST(REPLACE(process_id, 'ID', '') AS INT)), 0) + 1 AS new_process_id,
+    'running' AS status
+FROM
+    structured.t_dataload
+WHERE
+    config_id IN (
+        SELECT config_id
+        FROM structured.t_database_config
+        WHERE
+            do_Name = 'int1'
+            AND author = 'Raghav'
+            AND db_Type = 'sql server'
+            AND status = 'success'
+    )
+GROUP BY
+    config_id;
+
+-- Raise an exception if the status is already 'running'
+SELECT
+    config_id,
+    status
+FROM structured.t_dataload
+WHERE config_id IN (
+    SELECT config_id
+    FROM structured.t_dataload
+    WHERE status = 'running'
+);
+
+-- Update the status to 're-attempted' if the update succeeds
+UPDATE structured.t_dataload
+SET status = 're-attempted'
+WHERE config_id IN (
+    SELECT config_id
+    FROM structured.t_dataload
+    WHERE status = 'running'
+);
+
     AND db_type = 'sql server'
     AND status = 'success';
 
