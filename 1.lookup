@@ -57,3 +57,78 @@ LEFT JOIN (
     GROUP BY
         config_id
 ) dataload ON config.config_id = dataload.config_id;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+UPDATE structured.t_dataload
+SET
+    process_id = (
+        SELECT
+            CONCAT('ID', config_id, 'R', MAX(CAST(REPLACE(process_id, 'R', '') AS INT)) + 1) AS process_id
+        FROM structured.t_dataload
+        WHERE config_id = t_dataload.config_id
+        GROUP BY config_id
+    ),
+    status = 'running'
+WHERE do_name = 'int1'
+AND author = 'Raghav'
+AND db_type = 'sql server'
+AND status = 'success';
+
+SELECT
+    config.config_id,
+    CONCAT('select * from ', schema_name, ' ', REPLACE(config.table_name, 'dbo_', '')) AS query,
+    DATE_FORMAT(delta_end_time, '%Y/%m/%d %H:%i:%s') AS begin_time,
+    DATE_FORMAT(curr_camp, '%Y/%m/%d %H:%i:%s') AS end_time,
+    config.table_name,
+    config.load_type,
+    config.schema_name,
+    config.do_name,
+    contig.source_name,
+    config.db_type,
+    config.frequency,
+    config.secret_name,
+    config.watermark_columns,
+    config.custom_refresh,
+    process_id
+FROM structured.t_database_config config
+LEFT JOIN (
+    SELECT
+        t_dataload.*
+    FROM structured.t_dataload t_dataload
+    JOIN (
+        SELECT
+            config_id,
+            MAX(CAST(REPLACE(process_id, 'R', '') AS INT)) AS process_id
+        FROM structured.t_dataload
+        GROUP BY config_id
+    ) max_processid
+    ON t_dataload.config_id = max_processid.config_id
+    AND CONCAT('ID', max_processid.config_id, 'R', max_processid.process_id) = t_dataload.process_id
+) dataload
+ON config.config_id = dataload.config_id
+WHERE
+    do_name = 'int1'
+    AND author = 'Raghav'
+    AND db_type = 'sql server'
+    AND status = 'success';
+
