@@ -1,0 +1,59 @@
+-- Insert records into t_dataload with process_id and status 'running'
+INSERT INTO structured.t_dataload (config_id, process_id, status)
+SELECT
+    config_id,
+    COALESCE(MAX(CAST(REPLACE(process_id, 'ID', '') AS INT)), 0) + 1 AS new_process_id,
+    'running' AS status
+FROM
+    structured.t_dataload
+WHERE
+    config_id IN (
+        SELECT config_id
+        FROM structured.t_database_config
+        WHERE
+            do_Name = 'int1'
+            AND author = 'Raghav'
+            AND db_Type = 'sql server'
+            AND status = 'success'
+    )
+GROUP BY
+    config_id;
+
+-- Retrieve information related to database configurations
+SELECT
+    config.config_id,
+    CONCAT('select * from ', schema_name, ' ', REPLACE(config.table_name, 'dbo_', '')) AS query,
+    DATE_FORMAT(delta_end_time, 'yyyy/MM/dd HH:mm:ss') AS begin_time,
+    DATE_FORMAT(currenc_camescamp, 'yyyy/MM/dd HH:mm:ss') AS end_time,
+    config.table_name,
+    config.load_type,
+    config.schema_name,
+    config.do_name,
+    config.source_name,
+    config.db_Type,
+    config.frequency,
+    config.secret_name,
+    config.watermark_Columns,
+    config.custom_refresh,
+    dataload.process_id
+FROM
+    structured.t_database_config config
+LEFT JOIN (
+    SELECT
+        t_dataload.*,
+        MAX(CAST(REPLACE(process_id, 'ID', '') AS INT)) AS process_id
+    FROM
+        structured.t_dataload
+    WHERE
+        config_id IN (
+            SELECT config_id
+            FROM structured.t_database_config
+            WHERE
+                do_Name = 'int1'
+                AND author = 'Raghav'
+                AND db_Type = 'sql server'
+                AND status = 'success'
+        )
+    GROUP BY
+        config_id
+) dataload ON config.config_id = dataload.config_id;
