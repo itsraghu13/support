@@ -4,16 +4,17 @@ SELECT
         COALESCE(MAX(CAST(REGEXP_REPLACE(process_id, 'ID', '') AS INT)), 0) + 1 AS STRING
     ) AS new_id,
     CASE
-        WHEN dataload.config_id IS NOT NULL AND dataload.status = 'running' THEN 'duplicate run'
+        WHEN MAX(CASE WHEN dataload.status = 'running' THEN 1 ELSE 0 END) = 1 THEN 'duplicate run'
         ELSE 'running'
     END AS status
 FROM structured.t_database_config config
-LEFT JOIN structured.t_dataload dataload ON config.config_id = dataload.config_id AND dataload.status = 'running'
+LEFT JOIN structured.t_dataload dataload ON config.config_id = dataload.config_id
 WHERE config.do_Name = 'int1'
     AND config.author = 'Raghav'
     AND config.db_Type = 'sql server'
 GROUP BY
     config.config_id;
+
 
 
 
