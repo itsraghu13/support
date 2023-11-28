@@ -26,16 +26,17 @@ SELECT
   config.config_id,
   'ID' + CAST(
     COALESCE(MAX(CAST(REPLACE(process_id, 'ID', '') AS INT)), 0) + 1 AS VARCHAR
-  ),
-  IFNULL(
-    (
-      SELECT 'duplicate run'
-      FROM structured.t_dataload dataload
-      WHERE config_id = config.config_id
-        AND status = 'running'
-    ),
-    'running'
-  ) AS status
+  ) AS process_id,
+  CASE
+    WHEN
+      (SELECT COUNT(*)
+       FROM structured.t_dataload dataload
+       WHERE config_id = config.config_id
+         AND status = 'running'
+      ) > 0
+    THEN 'duplicate run'
+    ELSE 'running'
+  END AS status
 FROM structured.t_database_config config
 LEFT JOIN structured.t_dataload dataload ON config.config_id = dataload.config_id
 WHERE config.do_Name = 'int1'
