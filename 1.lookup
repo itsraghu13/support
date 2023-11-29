@@ -17,6 +17,32 @@ GROUP BY
 
 
 
+SELECT
+    config.config_id,
+    'ID' || CAST(
+        COALESCE(MAX(CAST(REGEXP_REPLACE(process_id, 'ID', '') AS INT)), 0) + 1 AS STRING
+    ) AS new_id,
+    CASE
+        WHEN MAX(CASE WHEN dataload.status = 'running' THEN 1 ELSE 0 END) = 1 THEN 'duplicate run'
+        ELSE 'running'
+    END AS status,
+    MAX(process_id) AS max_process_id,
+    LEAD(process_id) OVER (ORDER BY MAX(CAST(REGEXP_REPLACE(process_id, 'ID', '') AS INT))) AS next_process_id,
+    MAX(delta_start) AS max_delta_start,
+    LEAD(delta_start) OVER (ORDER BY MAX(CAST(REGEXP_REPLACE(process_id, 'ID', '') AS INT))) AS next_delta_start,
+    MAX(delta_end) AS max_delta_end,
+    LEAD(delta_end) OVER (ORDER BY MAX(CAST(REGEXP_REPLACE(process_id, 'ID', '') AS INT))) AS next_delta_end
+FROM structured.t_database_config config
+LEFT JOIN structured.t_dataload dataload ON config.config_id = dataload.config_id
+WHERE config.do_Name = 'int1'
+    AND config.author = 'Raghav'
+    AND config.db_Type = 'sql server'
+GROUP BY
+    config.config_id;
+
+
+
+
 
 
 
