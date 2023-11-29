@@ -3,6 +3,52 @@ SELECT
     'ID' || CAST(
         COALESCE(MAX(CAST(REGEXP_REPLACE(process_id, 'ID', '') AS INT)), 0) + 1 AS STRING
     ) AS new_id,
+    LAG(process_id) OVER (PARTITION BY config.config_id ORDER BY prev_delta_end_time) AS prev_process_id,
+    prev_delta_end_time AS prev_begin_time,
+    CASE
+        WHEN MAX(CASE WHEN dataload.status = 'running' THEN 1 ELSE 0 END) = 1 THEN 'duplicate run'
+        ELSE 'running'
+    END AS status
+FROM structured.t_database_config config
+LEFT JOIN (
+    SELECT
+        config_id,
+        MAX(delta_end_time) AS prev_delta_end_time
+    FROM structured.t_dataload
+    GROUP BY config_id
+) dataload_max ON config.config_id = dataload_max.config_id
+LEFT JOIN structured.t_dataload dataload ON config.config_id = dataload.config_id
+WHERE config.do_Name = 'int1'
+    AND config.author = 'Raghav'
+    AND config.db_Type = 'sql server'
+GROUP BY
+    config.config_id, prev_delta_end_time;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SELECT
+    config.config_id,
+    'ID' || CAST(
+        COALESCE(MAX(CAST(REGEXP_REPLACE(process_id, 'ID', '') AS INT)), 0) + 1 AS STRING
+    ) AS new_id,
     CASE
         WHEN MAX(CASE WHEN dataload.status = 'running' THEN 1 ELSE 0 END) = 1 THEN 'duplicate run'
         ELSE 'running'
