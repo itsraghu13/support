@@ -10,6 +10,31 @@
 
 
 
+
+
+result = spark.sql(query).collect()
+
+    if len(result) > 0:
+        # Extract values from the result
+        config_id = result[0][0]
+        process_id = result[0][1]
+        new_process_id = result[0][2]
+        print("New Process ID:", new_process_id)
+
+        # Update the row in the target_table
+        update_query = f"""
+            UPDATE target_table
+            SET new_process_id = '{new_process_id}'
+            WHERE config_id = {config_id} AND process_id = '{process_id}'
+        """
+        spark.sql(update_query)
+
+
+
+
+
+
+
 SELECT
     config.config_id,
     'ID' || CAST(
