@@ -9,7 +9,7 @@
 
 
 
-
+CAST(date_format('{original_timestamp}', 'yyyy-MM-dd\'T\'HH:mm:ss.SSS') AS TIMESTAMP)
 
 
 result = spark.sql(query).collect()
