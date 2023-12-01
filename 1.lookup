@@ -5,6 +5,18 @@
         spark.sql(insert_query)
 
 
+if createProcessId.upper() == 'NO':
+    final_query = "SELECT * FROM tempDF"
+    final_result = spark.sql(final_query).collect()
+
+    if final_result:
+        # Assuming there is at least one row in final_result
+        row = final_result[0]
+
+        # Unpack values directly from the row
+        config_id, deltaEndTime, deltaStartTime, pipelineName, pipelineRunId, processId, status, table_name, row_count, process_load_date = row
+
+        # Now you can use these variables as needed
 
 
 
