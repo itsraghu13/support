@@ -1,3 +1,15 @@
+ insert_query = f"""
+            INSERT INTO target_table (config_id, process_id, new_process_id)
+            VALUES ({config_id}, '{process_id}', '{new_process_id}')
+        """
+        spark.sql(insert_query)
+
+
+
+
+
+
+
 SELECT
     config.config_id,
     'ID' || CAST(
