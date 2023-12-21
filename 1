@@ -46,6 +46,39 @@ print(f"Converted Timestamp: {timestamp}")
 
 
 
+import struct
+from datetime import datetime, timedelta
+
+def lsn_to_datetime(lsn):
+    # Convert the hexadecimal string to bytes
+    lsn_bytes = bytes.fromhex(lsn[2:])  # Remove the '0x' prefix from the LSN
+    
+    # Extract the LSN components
+    lsn_value, unused = struct.unpack('<QH', lsn_bytes)
+    
+    # Calculate the timestamp based on LSN components
+    base_date = datetime(1900, 1, 1)
+    seconds_since_base_date = lsn_value / 10000000  # LSN value is in 100-nanosecond intervals
+    
+    try:
+        timestamp = base_date + timedelta(seconds=seconds_since_base_date)
+        return timestamp
+    except OverflowError as e:
+        print(f"Error: {e}")
+        print(f"LSN value: {lsn_value}")
+        print(f"Seconds since base date: {seconds_since_base_date}")
+        raise
+
+# Example usage
+lsn_value = "0x000D79AC00C992D80011"
+timestamp = lsn_to_datetime(lsn_value)
+
+print(f"Converted Timestamp: {timestamp}")
+
+
+
+
+
 
 SELECT
     config.config_id,
