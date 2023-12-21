@@ -1,3 +1,32 @@
+
+
+def lsn_to_datetime(lsn):
+    # ... (previous code)
+
+    # Calculate days and seconds separately
+    days_since_base_date = seconds_since_base_date // (24 * 60 * 60)
+    seconds_in_day = seconds_since_base_date % (24 * 60 * 60)
+
+    # Add days and seconds incrementally
+    timestamp = base_date
+    for _ in range(days_since_base_date):
+        timestamp += timedelta(days=1)
+    timestamp += timedelta(seconds=seconds_in_day)
+
+    return timestamp
+
+
+
+
+
+
+
+
+
+
+
+
+
 https://lucavallarelli.altervista.org/blog/service-principal-authentication-data-factory/
 
 
