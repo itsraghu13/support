@@ -1,6 +1,25 @@
 https://lucavallarelli.altervista.org/blog/service-principal-authentication-data-factory/
 
 
+import datetime
+
+# Example lsn value
+lsn = 1671532800000000000
+
+# Convert lsn to nanoseconds since epoch
+nanoseconds = lsn // 100
+
+# Convert nanoseconds to seconds since epoch
+seconds = nanoseconds / 1e9
+
+# Create a datetime object from the seconds
+timestamp = datetime.datetime.utcfromtimestamp(seconds)
+
+# Print the timestamp
+print(timestamp)
+
+
+
 
 SELECT
     config.config_id,
