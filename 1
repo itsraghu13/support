@@ -1,5 +1,33 @@
 import datetime
 
+lsn_hex = '0x000D79AC00C992D80011'
+lsn_int = int(lsn_hex, 16)
+
+# Extract relevant portion (assuming lower 32 bits)
+lsn_value = lsn_int & 0x00000000FFFFFFFF
+
+# Calculate nanoseconds and seconds (adjust base value if needed)
+nanoseconds = (lsn_value - 0xD79AC00C992D80000) * 100
+seconds = nanoseconds / 1e9
+
+# Create datetime object, considering time zone if applicable
+timestamp = datetime.datetime.fromtimestamp(seconds, tz=datetime.timezone.utc)  # Assuming UTC
+
+print(timestamp)
+
+
+
+
+
+
+
+
+
+
+
+
+import datetime
+
 # Example LSN value
 lsn_hex = '0x000D79AC00C992D80011'
 
