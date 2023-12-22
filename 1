@@ -1,3 +1,28 @@
+
+
+import datetime
+
+# ... (previous code)
+
+# Adjusted calculation (example, adjust as needed)
+nanoseconds = (lsn_value + 9223372036854775808) * 100  # Handle potential negative value
+seconds = nanoseconds / 1e9
+
+# Add difference if LSN epoch is not Unix epoch (example, adjust as needed)
+epoch_difference = 1577836800  # Assuming LSN epoch is January 1, 2020
+seconds += epoch_difference
+
+# Create datetime object
+timestamp = datetime.datetime.fromtimestamp(seconds, tz=datetime.timezone.utc)
+
+print(timestamp)
+
+
+
+
+
+
+
 import datetime
 
 lsn_hex = '0x000D79AC00C992D80011'
