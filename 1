@@ -1,3 +1,22 @@
+import datetime
+
+# Example LSN value
+lsn_hex = '0x000D79AC00C992D80011'
+
+# Convert hexadecimal to integer
+lsn_int = int(lsn_hex, 16)
+
+# Convert LSN to nanoseconds since epoch
+nanoseconds = (lsn_int - 0xD79AC00C992D80000) * 100
+
+# Convert nanoseconds to seconds since epoch
+seconds = nanoseconds / 1e9
+
+# Create a datetime object from the seconds
+timestamp = datetime.datetime.utcfromtimestamp(seconds)
+
+# Print the timestamp
+print(timestamp)
 
 
 def lsn_to_datetime(lsn):
