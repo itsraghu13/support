@@ -2,6 +2,9 @@ https://learn.microsoft.com/en-us/answers/questions/705328/get-bearer-token-for-
 
 https://learn.microsoft.com/en-us/answers/questions/659904/get-authorization-bearer-token-for-azure-managemen
 
+
+https://medium.com/analytics-vidhya/azure-data-factory-retrieve-token-from-azure-ad-using-oauth-2-0-9a3ed3f55013
+
 import requests
 import json
 
