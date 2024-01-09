@@ -17,6 +17,18 @@ tenant=tenantid&client_id=objectid(applicationid)&client_secret=clientsecret&gra
 
 grant_type=client_credentials&client_id=xxxxxxx&client_secret=xxxxxx&resource=https://fourl.operations.dynamics.com
 
+
+
+
+
+
+
+
+URL: https://login.microsoftonline.com/<SUBSCRIPTION_ID>/oauth2/token
+METHOD: POST
+HEADERS (to enter manually): Content-Type = application/x-www-form-urlencoded
+BODY(without the double quotes) : “grant_type=client_credentials&client_id=<APPLICATION_ID>&client_secret=<AUTHENTICATION_KEY>&resource=https://management.azure.com”
+
 import requests
 import json
 
