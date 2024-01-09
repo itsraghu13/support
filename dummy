@@ -5,6 +5,12 @@ https://learn.microsoft.com/en-us/answers/questions/659904/get-authorization-bea
 
 https://medium.com/analytics-vidhya/azure-data-factory-retrieve-token-from-azure-ad-using-oauth-2-0-9a3ed3f55013
 
+
+
+https://login.microsoftonline.com/tenantid/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+tenant=tenantid&client_id=objectid(applicationid)&client_secret=clientsecret&grant_type=client_credentials&scope=https://graph.microsoft.com/.default
+
 import requests
 import json
 
