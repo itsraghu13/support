@@ -1,4 +1,43 @@
 
+from pyspark.sql.functions import col, lit, row_number
+from pyspark.sql.window import Window
+
+# Assuming 'structured' is your database name, and 't_database_config' is your table name
+df_count = spark.sql('select count(*) as count from structured.t_database_config').collect()[0]['count']
+
+# Using row_number() function and a window specification
+window_spec = Window.orderBy("table_list")
+df = spark.sql("""
+    SELECT
+        (ROW_NUMBER() OVER (ORDER BY table_list) + {count}) as config_id
+    FROM
+        structured.t_stg_cdc_config
+    WHERE
+        load_date > (SELECT MAX(load_date) FROM structured.t_st_cdc_config) * 2
+""").replace('NULL', None)
+
+df.createOrReplaceTempView("tempDF")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 import datetime
 
