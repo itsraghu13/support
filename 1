@@ -1,3 +1,5 @@
+SELECT
+  SUBSTRING('{0}', POSITION('_', '{0}') + LENGTH('_source_name_'), LENGTH('{0}') - POSITION('_', '{0}') - POSITION('*', '{0}') - LENGTH('_source_name_') - POSITION('*', REVERSE('{0}'))) as TableName;
 
 SELECT
   REGEXP_REPLACE(table_name, '^t_([^_]+)_.*_([^_]+)_.*_cdc$', '$2') AS modified_table_name
