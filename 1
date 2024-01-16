@@ -1,3 +1,41 @@
+
+SELECT SUBSTRING(
+   SUBSTRING(columnName, POSITION('_', columnName) + 1),
+   1,
+   POSITION('_', SUBSTRING(columnName, POSITION('_', columnName) + 1)) - 1
+) AS TableName
+FROM yourTable;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 SELECT
   SUBSTRING('{0}', POSITION('_', '{0}') + LENGTH('_source_name_'), LENGTH('{0}') - POSITION('_', '{0}') - POSITION('*', '{0}') - LENGTH('_source_name_') - POSITION('*', REVERSE('{0}'))) as TableName;
 
