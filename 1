@@ -1,3 +1,11 @@
+
+SELECT SUBSTRING_INDEX(SUBSTRING_INDEX(column_name, '_', -2), '_', 1) AS table_name
+FROM your_table;
+
+
+
+
+
 SELECT SUBSTRING_INDEX(SUBSTRING_INDEX(column1, '_', 3), '_', -1) AS table_name
 FROM my_table;
 
