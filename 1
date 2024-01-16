@@ -1,4 +1,24 @@
 
+SELECT
+    SUBSTRING(table_name, 3, CHARINDEX('_cdc', table_name) - 3) AS modified_table_name
+FROM
+    your_database_name.information_schema.tables
+WHERE
+    table_name LIKE 't\_%\_cdc' ESCAPE '\';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 from pyspark.sql.functions import col, lit, row_number
 from pyspark.sql.window import Window
 
