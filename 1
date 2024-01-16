@@ -12,6 +12,10 @@ SELECT REGEXP_SUBSTR(columnName, '_([^_]+)_cdc', 2) AS TableName
 FROM yourTable;
 
 
+SELECT REGEXP_SUBSTR(columnName, '_([^_]+)_(?!cdc)', 1, 1, NULL, 1) AS TableName
+FROM yourTable;
+
+
 
 
 
