@@ -6,6 +6,16 @@ FROM
 WHERE
     table_name LIKE 't\_%\_cdc' ESCAPE '\';
 
+    SELECT
+  REGEXP_REPLACE(table_name, 't_([^_]+)_([^_]+)_cdc', '') AS modified_table_name
+FROM
+  structured.t_database_config
+WHERE
+  table_name LIKE 't\_%\_cdc'
+  AND table_name = '*+' || REPLACE(REPLACE(merge_col_tableName, 't_', ''), '_cdc', '') + '*'
+  AND config_id = '123';
+
+
 
 
     SELECT
