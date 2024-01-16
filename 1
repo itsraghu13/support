@@ -8,6 +8,16 @@ WHERE
 
 
 
+SELECT
+    CONCAT('t_', SUBSTRING(table_name, CHARINDEX('_source_name_', table_name) + LEN('_source_name_'), LEN(table_name))) AS modified_table_name
+FROM
+    your_database_name.information_schema.tables
+WHERE
+    table_name LIKE 't\_source_name\_%' ESCAPE '\';
+
+
+
+
 
 
 
