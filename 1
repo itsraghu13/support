@@ -1,6 +1,8 @@
 SELECT SUBSTRING_INDEX(SUBSTRING_INDEX(column1, '_', 3), '_', -1) AS table_name
 FROM my_table;
 
+SELECT REPLACE(REPLACE(column1, '_cdc', ''), '_', '') AS table_name
+FROM my_table;
 
 
 SELECT SUBSTRING(
