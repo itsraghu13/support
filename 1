@@ -1,3 +1,8 @@
+SELECT SUBSTRING_INDEX(column1, '_', -2) AS table_name
+FROM my_table;
+
+
+
 
 SELECT SUBSTRING(
    SUBSTRING(columnName, POSITION('_', columnName) + 1),
