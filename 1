@@ -15,6 +15,17 @@ FROM
 WHERE
     table_name LIKE 't\_source_name\_%' ESCAPE '\';
 
+import re
+
+# Assuming merge_col_tableName is a string variable containing the table name
+merge_col_tableName = "*+merge_col_tableName.replace('t_', '').replace('_cdc', '')+'"
+
+# Use regular expression to remove dynamic source_name
+merge_col_tableName = re.sub(r'_\w+', '', merge_col_tableName)
+
+result = spark.sql('select merge_columns from structured.t_database_config where table_name=' + merge_col_tableName + ' and config_id=' + ConfigId).collect()[0][0]
+
+
 
 
 
