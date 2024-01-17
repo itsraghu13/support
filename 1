@@ -1,31 +1,36 @@
-# Import necessary modules
 from pyspark.sql import SparkSession
 
-# Create a Spark session
-spark = SparkSession.builder.appName("table_search").getOrCreate()
+def search_tables_for_string(spark, database_name, search_string):
+    try:
+        # Show tables in the specified database
+        tables = spark.sql(f"SHOW TABLES IN {database_name}")
 
-# Replace 'your_database' and 'your_search_string' with your actual database and search string
-database_name = 'your_database'
-search_string = 'your_search_string'
+        # Iterate through tables and search for the string in table names
+        matching_tables = [row['tableName'] for row in tables.collect() if search_string in row['tableName']]
 
-# Show tables in the specified database
-tables = spark.sql(f"SHOW TABLES IN {database_name}")
+        # Display matching tables
+        if matching_tables:
+            print("Matching tables:")
+            for table_name in matching_tables:
+                print(table_name)
+        else:
+            print("No matching tables found.")
 
-# Iterate through tables and search for the string
-for table_row in tables.collect():
-    table_name = table_row['tableName']
-    query = f"SELECT * FROM {database_name}.{table_name} WHERE YOUR_COLUMN_NAME LIKE '%{search_string}%'"
-    
-    # Execute the query
-    result = spark.sql(query)
-    
-    # Show the result if there are matching rows
-    if result.count() > 0:
-        print(f"Table: {table_name}")
-        result.show()
+        print("Search completed.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
 
-# Stop the Spark session
-spark.stop()
+if __name__ == "__main__":
+    # Create a Spark session
+    spark = SparkSession.builder.appName("table_search").getOrCreate()
+
+    # Replace 'your_database' and 'your_search_string' with your actual database and search string
+    database_name = 'your_database'
+    search_string = 'your_search_string'
+
+    # Call the function to search for the string in table names
+   
+
 
 
 
