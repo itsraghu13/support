@@ -1,3 +1,46 @@
+def extract_table_name(input_string, prefix_to_remove, suffix_to_remove):
+    # Remove prefix
+    if input_string.startswith(prefix_to_remove):
+        input_string = input_string[len(prefix_to_remove):]
+
+    # Remove suffix
+    if input_string.endswith(suffix_to_remove):
+        input_string = input_string[:-len(suffix_to_remove)]
+
+    return input_string
+
+if __name__ == "__main__":
+    # Replace 'input_string', 'prefix_to_remove', and 'suffix_to_remove' with your actual values
+    input_string = "t_facets_AB_table_name_cdc"
+    prefix_to_remove = "t_facets_AB"
+    suffix_to_remove = "_cdc"
+
+    # Extract the table name
+    table_name = extract_table_name(input_string, prefix_to_remove, suffix_to_remove)
+
+    print("Table name:", table_name)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 from pyspark.sql import SparkSession
 
 def search_tables_for_string(spark, database_name, search_string):
