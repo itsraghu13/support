@@ -1,3 +1,42 @@
+# Import necessary modules
+from pyspark.sql import SparkSession
+
+# Create a Spark session
+spark = SparkSession.builder.appName("table_search").getOrCreate()
+
+# Replace 'your_database' and 'your_search_string' with your actual database and search string
+database_name = 'your_database'
+search_string = 'your_search_string'
+
+# Show tables in the specified database
+tables = spark.sql(f"SHOW TABLES IN {database_name}")
+
+# Iterate through tables and search for the string
+for table_row in tables.collect():
+    table_name = table_row['tableName']
+    query = f"SELECT * FROM {database_name}.{table_name} WHERE YOUR_COLUMN_NAME LIKE '%{search_string}%'"
+    
+    # Execute the query
+    result = spark.sql(query)
+    
+    # Show the result if there are matching rows
+    if result.count() > 0:
+        print(f"Table: {table_name}")
+        result.show()
+
+# Stop the Spark session
+spark.stop()
+
+
+
+
+
+
+
+
+
+
+
 
 SELECT SUBSTRING_INDEX(SUBSTRING_INDEX(column_name, '_', -2), '_', 1) AS table_name
 FROM your_table;
