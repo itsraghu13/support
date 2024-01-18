@@ -1,3 +1,31 @@
+
+from pyspark.sql import SparkSession
+
+# Create a Spark session
+spark = SparkSession.builder.appName("TableDeletion").getOrCreate()
+
+# Define your table names
+table_names = ["table1", "table2", "table3", "table4", "table5"]
+
+# Iterate through each table and delete all rows
+for table_name in table_names:
+    delete_query = f"DELETE FROM {table_name}"
+    
+    # Execute the delete query
+    spark.sql(delete_query)
+
+# Stop the Spark session
+spark.stop()
+
+
+
+
+
+
+
+
+
+
 def extract_table_name(input_string, prefix_to_remove, suffix_to_remove):
     # Remove prefix
     if input_string.startswith(prefix_to_remove):
