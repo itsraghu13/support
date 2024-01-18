@@ -2,6 +2,42 @@
 from pyspark.sql import SparkSession
 
 # Create a Spark session
+spark = SparkSession.builder.appName("TableList").getOrCreate()
+
+# Execute the SQL query
+query_result = spark.sql("SELECT table_name FROM your_table")
+
+# Collect the results into a list
+table_names_list = [row["table_name"] for row in query_result.collect()]
+
+# Print or use the list as needed
+print(table_names_list)
+
+# Stop the Spark session
+spark.stop()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+from pyspark.sql import SparkSession
+
+# Create a Spark session
 spark = SparkSession.builder.appName("TableDeletion").getOrCreate()
 
 # Define your table names
