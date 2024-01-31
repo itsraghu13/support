@@ -1,4 +1,47 @@
 
+from datetime import datetime
+import pytz
+
+def convert_gmt_to_cst(gmt_timestamp):
+    # Define timezone objects
+    gmt_timezone = pytz.timezone('GMT')
+    cst_timezone = pytz.timezone('America/Chicago')  # CST with daylight saving time adjustments
+
+    # Convert the input timestamp from GMT to CST
+    gmt_datetime = gmt_timezone.localize(gmt_timestamp)
+    cst_datetime = gmt_datetime.astimezone(cst_timezone)
+
+    return cst_datetime
+
+# Example usage:
+gmt_timestamp = datetime(2022, 1, 31, 12, 0, 0)  # Replace this with your GMT timestamp
+cst_timestamp = convert_gmt_to_cst(gmt_timestamp)
+
+print("GMT Timestamp:", gmt_timestamp)
+print("CST Timestamp:", cst_timestamp)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 from pyspark.sql import SparkSession
 
 # Create a Spark session
