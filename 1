@@ -1,3 +1,16 @@
+import org.apache.spark.sql.functions._
+
+// Assuming your DataFrame is named df and the column is named original_date_column
+val formattedDF = df.withColumn("formatted_date", from_unixtime(unix_timestamp(col("original_date_column"), "yyyyMMddHHmm")))
+
+formattedDF.show()
+
+
+
+
+
+
+
 // Assuming your DataFrame is named df and the column is named original_number_column
 df.createOrReplaceTempView("my_table")
 
