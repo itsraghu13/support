@@ -8,6 +8,10 @@ formattedDF.show()
 
 
 
+-- Assuming your table is named my_table and the column is named original_date_column
+SELECT 
+  TO_DATE(from_unixtime(unix_timestamp(original_date_column, 'yyyyMMddHHmm')), 'yyyy-MM-dd') AS formatted_date
+FROM my_table;
 
 
 
