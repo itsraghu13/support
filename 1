@@ -5,6 +5,12 @@ val formattedDF = df.withColumn("formatted_date", from_unixtime(unix_timestamp(c
 
 formattedDF.show()
 
+-- Assuming your table is named my_table and the column is named original_date_column
+SELECT 
+  from_unixtime(cast(original_date_column as bigint) / 1000, 'yyyy-MM-dd HH:mm') AS formatted_date
+FROM my_table;
+
+
 
 
 
