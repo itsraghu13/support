@@ -1,3 +1,10 @@
+// Assuming your DataFrame is named df and the column is named original_number_column
+df.createOrReplaceTempView("my_table")
+
+// Run the SQL query
+val modifiedDF = spark.sql("SELECT substr(cast(original_number_column as string), 1, length(cast(original_number_column as string)) - 4) as modified_number FROM my_table")
+
+modifiedDF.show()
 
 from datetime import datetime
 import pytz
