@@ -1,3 +1,39 @@
+
+def update_delta_table(data):
+  for attempt in range(max_attempts):
+    try:
+      # Your code to update the Delta table with data
+      break  # Successful update, exit the loop
+    except (FileAlreadyExistsException, OptimisticTransactionConflictException) as e:
+      if attempt >= max_attempts - 1:
+        raise  # Reached maximum retries, re-raise the exception
+      else:
+        wait_time = calculate_backoff_time(attempt)
+        print(f"Concurrent update detected. Retrying in {wait_time} seconds...")
+        time.sleep(wait_time)
+
+def calculate_backoff_time(attempt):
+  base_wait_time = 2  # Initial wait time in seconds
+  return base_wait_time * 2**attempt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import org.apache.spark.sql.functions._
 
 // Assuming your DataFrame is named df and the column is named original_date_column
