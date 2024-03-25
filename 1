@@ -1,3 +1,103 @@
+import time
+import random
+
+def concurrent_dataload_table(query, retry=5):
+    if retry > 1:
+        try:
+            return spark.sql(query)
+        except Exception as e:
+            retry -= 1
+            delay = random.randrange(240, 301)
+            time.sleep(delay)
+            print(str(retry) + " Failed, added delay " + str(delay))
+            return concurrent_dataload_table(query, retry)
+    else:
+        raise Exception("Update failed")
+
+def insert_unique_record(configId):
+    # Check if the record already exists
+    existing_record = spark.sql("""
+    SELECT status FROM structured.t_dataload WHERE config_id = {}
+    """.format(configId)).collect()
+
+    if not existing_record or existing_record[0].status != "running":
+        # Record does not exist or status is not "running", proceed with insertion
+        query = """
+        SELECT config.config_id,
+            coalesce(CONCAT('ID', config.config_id, 'R', max(cast(replace(process_id, CONCAT('ID', config.config_id, 'R'), '') as int)) + 1),
+                    concat('ID', config.config_id, 'R', '1')) as process_id,
+            CASE
+                WHEN MAX(CASE WHEN dataload.status = 'running' THEN 1 ELSE 0 END) > 1 THEN 'duplicate run'
+                ELSE 'running'
+            END AS status
+        FROM structured.t_database_config config
+        LEFT JOIN structured.t_dataload dataload ON config.config_id = dataload.config_id
+        WHERE config.config_id = {}
+        GROUP BY config.config_id
+        """.format(configId)
+
+        result = concurrent_dataload_table(query).collect()
+        entry_type = result[0][2]
+        print(entry_type)
+
+        if entry_type != "duplicate run":
+            generated_process_id = result[0][1]
+            insert_query = """
+            INSERT INTO structured.t_dataload (config_id, process_id, status)
+            VALUES ({}, '{}', 'running')
+            """.format(configId, generated_process_id)
+            spark.sql(insert_query)
+        else:
+            raise Exception("Duplicate Entry Found")
+
+if createProcessId.upper() == "YES":
+    insert_unique_record(configId)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 import time
 import random
