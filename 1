@@ -1,5 +1,152 @@
 import time
 import random
+from pyspark.sql import functions as F
+
+def concurrent_dataload_table(query, retry=5):
+    if retry > 1:
+        try:
+            return spark.sql(query)
+        except Exception as e:
+            retry -= 1
+            delay = random.randrange(240, 301)
+            time.sleep(delay)
+            print(str(retry) + " Failed, added delay " + str(delay))
+            return concurrent_dataload_table(query, retry)
+    else:
+        raise Exception("Update failed")
+
+def idempotent_dataload(config_id, max_retries=5):
+    """Executes data load query with idempotence handling and conflict resolution.
+
+    Args:
+        config_id (int): The configuration ID for the data load process.
+        max_retries (int, optional): The maximum number of retries in case of
+                                     conflicts or failures. Defaults to 5.
+
+    Returns:
+        str: The generated process ID or a message indicating a duplicate run.
+
+    Raises:
+        Exception: If the maximum retries are exhausted or another unexpected error occurs.
+    """
+
+    for attempt in range(max_retries):
+        query = f"""
+          SELECT config.config_id,
+                 coalesce(CONCAT('ID', config.config_id, 'R',
+                                  max(cast(replace(process_id, CONCAT('ID', config.config_id, 'R'), '') as int)) + 1),
+                          concat('ID', config.config_id, 'R', '1')) AS process_id,
+                 CASE WHEN MAX(CASE WHEN dataload.status = 'running' THEN 1 ELSE 0 END) > 1 THEN 'duplicate run'
+                      ELSE 'running'
+                 END AS status
+          FROM structured.t_database_config config
+          LEFT JOIN structured.t_dataload dataload ON config.config_id = dataload.config_id
+          WHERE config.config_id = {config_id}
+          GROUP BY config.config_id
+        """
+
+        result = concurrent_dataload_table(query).collect()
+
+        if result:
+            entry_type = result[0][2]
+            if entry_type != "duplicate run":
+                generated_process_id = result[0][1]
+
+                # Attempt optimistic insert with conflict resolution using MERGE or INSERT INTO ... SELECT ... FOR UPDATE/SKIP LOCKED (optional)
+                try:
+                    # Option 1: MERGE (if supported by your Spark version):
+                    # merge_query = f"""
+                    #   MERGE INTO structured.t_dataload t
+                    #   USING (SELECT {configId} AS config_id, '{generated_process_id}' AS process_id, 'running' AS status) AS s
+                    #   ON t.config_id = s.config_id AND t.process_id IS NULL -- OR use a unique constraint on process_id
+                    #   WHEN MATCHED THEN UPDATE SET t.status = 'duplicate run' -- OR raise an exception
+                    #   WHEN NOT MATCHED THEN INSERT (config_id, process_id, status) VALUES (s.config_id, s.process_id, s.status)
+                    # """
+                    # spark.sql(merge_query)
+
+                    # Option 2: INSERT INTO ... SELECT ... FOR UPDATE/SKIP LOCKED (if database supports locking):
+                    insert_query = f"""
+                        INSERT INTO structured.t_dataload (config_id, process_id, status)
+                        SELECT {configId}, '{generated_process_id}', 'running'
+                        FOR UPDATE OF t_dataload SKIP LOCKED ROWS
+                    """
+                    spark.sql(insert_query)
+                    return generated_process_id
+                except Exception as e:
+                    if "duplicate key" in str(e).lower():  # Handle potential unique constraint violation
+                        print("Duplicate process ID detected.")
+                    else:
+                        raise e  # Re-raise unexpected errors
+
+        time.sleep(random.randrange(240, 301))  # Backoff for retries
+
+    raise Exception("Failed to generate unique process ID after retries.")
+
+if createProcessId.upper() == "YES":
+    result = idempotent_datal
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import time
+import random
 
 def concurrent_dataload_table(query, retry=5):
     if retry > 1:
